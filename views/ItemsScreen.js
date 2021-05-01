@@ -41,60 +41,57 @@ export default function ItemsScreen({navigation}) {
 	return (
 		<MainScreen>
 			
-			<View style={{flex:1,minHeight: 100,maxHeight: 100,padding: 50,flexDirection: 'row'}}>
-				<View style={{width: 40}}>
-					<Icon
-						name='arrow-left'
-						type='font-awesome'
-						style={{fontSize: 25,color: Colors.primary, textAlign: 'center',padding: 10}}
-						
-						onPress={() => {
-							navigation.navigate('Dashboard');
-						}}
-					/>
-
-				</View>
-				<View style={{flex:1 ,alignItem: 'center',justifyContent: 'center',width: 200}}>
-					<Text style={{textAlign: 'center',color:Colors.primary ,fontSize: 22 ,fontWeight: '700',marginTop: 25}}>Loaded Items</Text>
-				</View>
-			</View>
 			<ScrollView>
+				<View >
+					<View style={{flex: 1,flexDirection:'row',width: '100%',marginTop: 40}}>
+						<Icon
+							name='arrow-left'
+							type='font-awesome'
+							style={{fontSize: 25,color: 'red', textAlign: 'center',padding: 10,color: Colors.primary}}
+							
+							onPress={() => {
+								navigation.navigate('Dashboard');
+							}}
+						/>
+						<View style={{justifyContent: 'center',width: '80%'}}>
+							<Text style={{textAlign: 'center',color:Colors.primary ,fontSize: 22 ,fontWeight: '700'}}>Loaded Items</Text>
+						</View>
+					</View>
+				</View>
 					{(activeIndicatorLoader == true) ? 
 						<ActivityIndicator size="large" color="#6c33a1" />
 					:
 					<Text></Text>
 					}
 						
-						{(ListItems != undefined) ?
-							Object.keys(ListItems).map((key , value) => {
-								return (
-									<View key={key}>					
-										<Text style={{fontSize: 18,paddingLeft: 30, backgroundColor: Colors.primary,color: 'white',textAlign: 'center',paddingVertical: 5,marginBottom: 20,marginLeft: 10}}>{key}</Text>	
-										<View style={styles.itemsContainer}>													
-										{ListItems[key].map((k , v) => {
-											return (
-													<View key={k.id}>
-														<ItemCard
-															key={k.id}
-															backgroundColor="#fff" 
-															cardName={k.name} 
-															imageUrl={imagePrefix+''+k.img}
-															// styleData={{ borderWidth: 2 , borderColor: 'red' }}
-														/>
-													</View>
-														
-												)
-											})}
-										</View>
-									</View>
-								)
-							})
+					{(ListItems != undefined) ?
+						Object.keys(ListItems).map((key , value) => {
+							return (
+								<View key={key} style={{marginBottom: 85}}>
+									<Text style={{fontSize: 18,paddingLeft: 30, backgroundColor: Colors.primary,color: 'white',textAlign: 'center',paddingVertical: 5,marginLeft: 10}}>{key}</Text>
+									{Object.keys(ListItems[key]).map(( k , v) => {
+										return (
+											<View key={k}>
+												<Text key={k} style={{paddingHorizontal: 13,paddingVertical: 10,backgroundColor: '#ededed' ,fontSize: 18,marginTop: 15}}>{k}</Text>
+												<View key={v} style={{flex: 1, flexDirection: 'row',flexWrap: 'wrap',justifyContent : 'space-evenly'}}>
+													{Object.keys(ListItems[key][k]).map((ke ,val) => {
+														return(
+															<ItemCard key={ke} backgroundColor="#fff" loadName={key} cardId={ListItems[key][k][ke].id} cardName={ListItems[key][k][ke].name} imageUrl={imagePrefix+''+ListItems[key][k][ke].img} />
+														)
+													})}
+												</View>
+											</View>
+										)
+									})}
+								</View>
+							)
+						})
 
-							
-						:
 						
-						<Text></Text>
-						}
+					:
+					
+					<Text></Text>
+					}
 						
 				</ScrollView>
 				<Pressable 	

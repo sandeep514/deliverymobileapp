@@ -1,5 +1,5 @@
 import React, {useEffect , useState} from 'react';
-import {View, Text, Image, StyleSheet, Pressable , TextInput } from 'react-native';
+import {View, Text, Image, StyleSheet, Pressable , TextInput ,Button } from 'react-native';
 import {Input} from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {Colors} from '../components/Colors';
@@ -9,69 +9,92 @@ let selectedLoadArray = {};
 export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, styleData, qty, cardId ,loadName }) => {
 	const [ UpdateQtyofItem , setUpdateQtyofItem] = useState({});
 	const [ UpdateQtyofItems , setUpdateQtyofItems] = useState(0);
-	function getinputValue(loadName , cardId , value){
-		selectedLoadArray[loadName+'__'+cardId] = {'value' : value ,'cardId' : cardId}; 
-	}
+
 	function addQtyItem(loadName , cardId){
 		let loadedName = loadName+'__'+cardId;
-
+		
 		if( selectedLoadArray[loadedName] != undefined ){
 			selectedLoadArray[loadedName].value = (selectedLoadArray[loadedName].value+1);
+			setUpdateQtyofItem(selectedLoadArray)
 		}else{
 			selectedLoadArray[loadName+'__'+cardId] = {'value' : 1 ,'cardId' : cardId};
+			setUpdateQtyofItem(selectedLoadArray)
 		}
-		setUpdateQtyofItem(selectedLoadArray)
-		// console.log('====================================');
-		let value = (UpdateQtyofItem[loadName+'__'+cardId] != undefined) ? (UpdateQtyofItem[loadName+'__'+cardId].value).toString() : '0'
-		// console.log(UpdateQtyofItem);
-		// console.log('====================================');
 
-	
-		console.log('====================================');
-		console.log(value);
-		console.log('====================================');
+		if( UpdateQtyofItems == undefined ){
+			setUpdateQtyofItems(1);
+		}else{
+			setUpdateQtyofItems((UpdateQtyofItems+1));
+		}
+		console.log(selectedLoadArray);
+	}
+	function minusQtyItem(loadName , cardId){
+		let loadedName = loadName+'__'+cardId;
+		
+		if( selectedLoadArray[loadedName] != undefined ){
+			if( selectedLoadArray[loadedName].value != 0 ){
+				selectedLoadArray[loadedName].value = (selectedLoadArray[loadedName].value-1);
+				setUpdateQtyofItem(selectedLoadArray)
+			}
+		}else{
+			selectedLoadArray[loadName+'__'+cardId] = {'value' : 0 ,'cardId' : cardId};
+			setUpdateQtyofItem(selectedLoadArray)
+		}
+
+		if( UpdateQtyofItems == undefined ){
+			setUpdateQtyofItems(0);
+		}else{
+			if( UpdateQtyofItems != 0){
+				setUpdateQtyofItems((UpdateQtyofItems-1));
+			}
+		}
+		console.log(selectedLoadArray);
 	}
 
 	return (
-		(qty == false) ?			
-			<Pressable
-				onPress={onPress}
-				style={[styles.cardBackground, {backgroundColor: backgroundColor} , styleData]}>
+		(qty == 'true') ?
+			<View>
+				<View style={[styles.cardBackground, {backgroundColor: backgroundColor,height: 225} , styleData]}>
+					<View style={styles.itemImageContainer}>
+						<Image source={{uri:imageUrl}} style={styles.itemImage} />
+						<Text style={styles.cardName ,{height: 'auto',fontSize: 14,marginTop: 6,marginBottom: 6}} allowFontScaling={false}>
+							{ ((cardName).length > 20) ? 
+								(((cardName).substring(0,20-3)) + '...') : 
+								cardName }
+						</Text>
+					</View>
+					<View style={{flex:1 ,flexDirection: 'row', backgroundColor: '#ebedf087',width: '100%' }} >
+						<View >
+							<Pressable onPress={ () => { addQtyItem( loadName , cardId ) } } style={{backgroundColor: Colors.primary,padding: 8}}>
+								<Icon name='plus' type='font-awesome' style={{fontSize: 25,color: 'white', textAlign: 'center'}} />
+							</Pressable>
+							{/* <Button title="clickme" onPress={() => {clickme()}}></Button> */}
+						</View>
+						<View style={{width: 87}}>
+							<TextInput value={ (UpdateQtyofItems != undefined) ? UpdateQtyofItems.toString() : 0} key={cardId} placeholder="Qty" style={{textAlign: 'center'}} />
+						</View>
+						<View style={{backgroundColor: 'red'}}>
+							<Pressable onPress={ () => { minusQtyItem( loadName , cardId ) } } style={{backgroundColor: 'red',padding: 8}}>
+								<Icon name='minus' type='font-awesome' style={{fontSize: 25,color: 'white', textAlign: 'center'}} />
+							</Pressable>
+						</View>
+					</View>
+				</View>
+			</View>
+		: 
+			<Pressable onPress={onPress} style={[styles.cardBackground, {backgroundColor: backgroundColor} , styleData]}>
 				<View style={styles.itemImageContainer}>
 					<Image source={{uri:imageUrl}} style={styles.itemImage} />
 				</View>
 
 				<View style={styles.cardFooterBackground}>
 					<Text style={styles.cardName} allowFontScaling={false}>
-					{cardName}
-					</Text>
-				</View>
-			</Pressable>
-		: 
-		<Pressable onPress={onPress} style={[styles.cardBackground, {backgroundColor: backgroundColor,height: 225} , styleData]}>
-				<Text>{(UpdateQtyofItem[loadName+'__'+cardId] != undefined) ? (UpdateQtyofItem[loadName+'__'+cardId].value).toString() : '0' }</Text>
-				<View style={styles.itemImageContainer}>
-					<Image source={{uri:imageUrl}} style={styles.itemImage} />
-					<Text style={styles.cardName ,{height: 'auto',fontSize: 14,marginTop: 6,marginBottom: 6}} allowFontScaling={false}>
 						{ ((cardName).length > 20) ? 
 							(((cardName).substring(0,20-3)) + '...') : 
-							cardName }
-					</Text>
-				</View>
-				<View style={{flex:1 ,flexDirection: 'row', backgroundColor: '#ebedf087',width: '100%' }} >
-					<View >
-						<Pressable onPress={ () => { addQtyItem( loadName , cardId ) } } style={{backgroundColor: Colors.primary,padding: 8}}>
-							<Icon name='plus' type='font-awesome' style={{fontSize: 25,color: 'white', textAlign: 'center'}} />
-						</Pressable>
-					</View>
-					<View style={{width: 87}}>
-						<TextInput value={ (UpdateQtyofItem[loadName+'__'+cardId] != undefined) ? (UpdateQtyofItem[loadName+'__'+cardId].value).toString() : '0' } key={cardId} onChangeText={(value) => { getinputValue( loadName , cardId , value ) }} placeholder="Qty" style={{textAlign: 'center'}} />
-					</View>
-					<View style={{backgroundColor: 'red',padding: 8}}>
-						<Icon name='minus' type='font-awesome' style={{fontSize: 25,color: 'white', textAlign: 'center'}} />
-					</View>
+							cardName }</Text>
 				</View>
 			</Pressable>
+
 	);
 };
 

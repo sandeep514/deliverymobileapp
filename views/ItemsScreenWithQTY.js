@@ -74,7 +74,7 @@ export default function ItemsScreenWithQty({navigation}) {
 			</ScrollView>
 			<Pressable 	
 				onPress={() => { 
-					
+					alert("work in progress")
 				}}
 				style={{bottom : 10, position: 'absolute',justifyContent : 'center',padding:10 ,height: 70, width: 70,backgroundColor: Colors.primary,borderRadius: 100, right : 10}}
 			>

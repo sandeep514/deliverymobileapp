@@ -19,6 +19,7 @@ import { useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getTodaySale, getVehicleLoadCount } from '../api/apiService';
 import { ActivityIndicator } from 'react-native';
+import GetLocation from 'react-native-get-location'
 
 export default function Dashboard({navigation , route}) {
 	const [ userName ,setuserName ] = useState();
@@ -27,6 +28,16 @@ export default function Dashboard({navigation , route}) {
 	const [ SalesOfDay ,setSalesOfDay ] = useState();
 	const [ TotalAmount ,setTotalAmount ] = useState();
 
+	function getLocation() {
+		GetLocation.getCurrentPosition({enableHighAccuracy: true,timeout: 10000,
+		}).then(location => {
+			AsyncStorage.setItem( 'location' , JSON.stringify(location));
+			console.log(location)
+		}).catch(error => {
+			const { code, message } = error;
+		})
+	}
+	
 	useEffect(() => {
 		AsyncStorage.getItem('selectedVehicleNo').then((value) => {
 			let vehicheId = value;
@@ -57,6 +68,7 @@ export default function Dashboard({navigation , route}) {
 				});
 			})
 		})
+		getLocation()
 	} , [])
 
 
