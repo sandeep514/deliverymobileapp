@@ -21,7 +21,7 @@ export default function Nav({navigation}) {
 	return (
 		<NavigationContainer>
 
-			<Stack.Navigator initialRouteName="Dashboard" allowFontScaling={false}
+			<Stack.Navigator initialRouteName="Login" allowFontScaling={false}
 				screenOptions={{
 				headerStyle: {
 					backgroundColor: '#fff',

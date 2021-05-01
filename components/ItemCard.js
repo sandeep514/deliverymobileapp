@@ -57,9 +57,9 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 				<View style={[styles.cardBackground, {backgroundColor: backgroundColor,height: 225} , styleData]}>
 					<View style={styles.itemImageContainer}>
 						<Image source={{uri:imageUrl}} style={styles.itemImage} />
-						<Text style={styles.cardName ,{height: 'auto',fontSize: 14,marginTop: 6,marginBottom: 6}} allowFontScaling={false}>
-							{ ((cardName).length > 20) ? 
-								(((cardName).substring(0,20-3)) + '...') : 
+						<Text style={styles.cardName ,{height: 'auto',fontSize: 12,marginTop: 6,marginBottom: 6}} allowFontScaling={false}>
+							{ ((cardName).length > 15) ? 
+								(((cardName).substring(0,15-3)) + '...') : 
 								cardName }
 						</Text>
 					</View>
@@ -71,7 +71,7 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 							{/* <Button title="clickme" onPress={() => {clickme()}}></Button> */}
 						</View>
 						<View style={{width: 87}}>
-							<TextInput value={ (UpdateQtyofItems != undefined) ? UpdateQtyofItems.toString() : 0} key={cardId} placeholder="Qty" style={{textAlign: 'center'}} />
+							<TextInput style={{color: '#000'}} value={ (UpdateQtyofItems != undefined) ? UpdateQtyofItems.toString() : 0} key={cardId} placeholder="Qty" style={{textAlign: 'center'}} />
 						</View>
 						<View style={{backgroundColor: 'red'}}>
 							<Pressable onPress={ () => { minusQtyItem( loadName , cardId ) } } style={{backgroundColor: 'red',padding: 8}}>
