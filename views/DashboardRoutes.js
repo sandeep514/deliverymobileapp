@@ -1,13 +1,14 @@
-    import React, {useState,useEffect} from 'react';
-    import {Image, Pressable, ScrollView, StyleSheet, TouchableHighlight, View} from 'react-native';
-    import {Icon, ListItem} from 'react-native-elements';
-    import {Colors} from '../components/Colors';
-    import MainScreen from '../layout/MainScreen';
-    import {heightToDp} from '../utils/Responsive';
-    import MapView, { Marker } from 'react-native-maps';
+import React, {useState,useEffect} from 'react';
+import {ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, TouchableHighlight, View} from 'react-native';
+import {Icon, ListItem} from 'react-native-elements';
+import {Colors} from '../components/Colors';
+import MainScreen from '../layout/MainScreen';
+import {heightToDp} from '../utils/Responsive';
+import MapView, { Marker } from 'react-native-maps';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getPriorityDrivers } from '../api/apiService';
 
-    const list = [
+const list = [
         {
             id: 1,
             name: 'Route One',
@@ -25,8 +26,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
             latitudeDelta: 1,
             longitudeDelta: 1,
         })
+        const [listRoutes , setListRoutes] = useState();
+        const [hasRoutes , setHasRoutes] = useState(false);
         useEffect(() => {
-            getLocation()
+            getRoutes()
             AsyncStorage.getItem('location').then( (data) => {
                 let currentLoc = JSON.parse(data)
                 setCoord({  latitude: currentLoc.latitude,
@@ -35,13 +38,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
                             longitudeDelta: 1
                         })
             })
-        })
+        } , [])
 
-        function getLocation(){
-
+        function getRoutes(){
+            AsyncStorage.getItem('selectedRoute').then((routeId) => {
+                AsyncStorage.getItem('user_id').then((driverid) => {
+                    getPriorityDrivers(driverid , 4).then((res) => {
+                        setHasRoutes(true)
+                        setListRoutes(res.data.data);
+                    } , (err) =>{
+                        console.log(err)
+                    })
+                }) 
+            })
+            
         }
         
-        const [coordinates] = useState([
+        const [coordinates ,setcoordinates] = useState([
             {
                 
             },
@@ -53,10 +66,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
             }
         ]);
         const [active, setActive] = new useState();
-        const listClicked = (listId) => {
-            setActive(listId);
-            navigation.navigate('ItemsScreenWithQty');
+        const listClicked = (listData) => {
+            setActive(listData.id);
+            AsyncStorage.setItem( 'selectedBuyerRouteId', (listData.id).toString());
+            setcoordinates([{} ,{    latitude: parseFloat(listData.latitude),
+                                    longitude: parseFloat(listData.longitude),
+                                    latitudeDelta: 1,
+                                    longitudeDelta: 1
+                                }])
         };
+
         return (
             <MainScreen>
                 <View style={styles.container}>
@@ -76,25 +95,33 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
                             <Icon name="refresh" type='font-awesome' color={Colors.primary}/>
                         </Pressable>
                     </View>
-                    {/* <View style={styles.nextButton}>
-                        <Pressable>
+                    <View style={styles.nextButton}>
+                        <Pressable onPress={ () => {  navigation.navigate('ItemsScreenWithQty') }}>
                             <Icon name="chevron-right" type='font-awesome' color="white"/>
                         </Pressable>
-                    </View> */}
+                    </View>
                     <View style={{padding: 0 , margin: 0}}>
                         <ScrollView >
-                            { list.map((l, i) => (
-                                <TouchableHighlight key={i} onPress={(event) => listClicked(l.id)} >
-                                    {/* <ListItem containerStyle={(active == l.id) ? styles.active : styles.unactive} key={i} bottomDivider> */}
-                                    <ListItem key={i} bottomDivider  >
-                                        <Image source={require('../assets/images/map.png')} style={styles.Avatar} />
-                                        <ListItem.Content>
-                                            <ListItem.Title>{l.name}</ListItem.Title>
-                                        </ListItem.Content>
-                                        <ListItem.Chevron/>
-                                    </ListItem>
-                                </TouchableHighlight>
-                            )) }
+
+                            { (hasRoutes != false && listRoutes != undefined) ?
+                                listRoutes.map((l, i) => (
+                                    <TouchableHighlight key={i} onPress={(event) => listClicked(l)} >
+                                        <ListItem containerStyle={(active == l.id) ? styles.active : styles.unactive} key={i} bottomDivider>
+                                        {/* <ListItem key={i} bottomDivider  > */}
+                                            <Image source={require('../assets/images/map.png')} style={styles.Avatar} />
+                                            <ListItem.Content>
+                                                <ListItem.Title>{l.name}</ListItem.Title>
+                                                <ListItem.Title style={{color: 'grey',fontSize: 12}}>{l.address}</ListItem.Title>
+                                            </ListItem.Content>
+                                            <ListItem.Chevron/>
+                                        </ListItem>
+                                    </TouchableHighlight>
+                                )) 
+                            :
+                                <View>
+                                    <ActivityIndicator color={Colors.primary} size="large"></ActivityIndicator>
+                                </View>
+                            }
                         </ScrollView>
                     </View>
                 </View>

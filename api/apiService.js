@@ -129,3 +129,20 @@ export const getTodaySale = ( vehicheNumber , driverId ) => {
 		});
 	});
 };
+
+
+// https://staging.tauruspress.co.uk/backend/public/api/get-buyer-priortity-by-driver/12/4
+//get Today sale
+export const getPriorityDrivers = ( driverId , routeId ) => {
+	return new Promise( (resolve , reject) => {
+		console.log(driverId , routeId);
+		apiClient.get( 'get-buyer-priortity-by-driver/'+driverId+'/'+routeId ).then((response) => {
+			if(response.data.status == true){
+			
+				resolve(response);
+			}else{
+				reject(response.data.error);
+			}
+		});
+	});
+};
