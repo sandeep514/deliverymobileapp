@@ -76,11 +76,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
                             <Icon name="refresh" type='font-awesome' color={Colors.primary}/>
                         </Pressable>
                     </View>
-                    <View style={styles.nextButton}>
+                    {/* <View style={styles.nextButton}>
                         <Pressable>
                             <Icon name="chevron-right" type='font-awesome' color="white"/>
                         </Pressable>
-                    </View>
+                    </View> */}
                     <View style={{padding: 0 , margin: 0}}>
                         <ScrollView >
                             { list.map((l, i) => (
