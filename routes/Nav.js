@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 //Screens
@@ -14,94 +14,96 @@ import DashboardRoutes from '../views/DashboardRoutes';
 import VehicleScreen from '../views/VehicleScreen';
 import LoadsScreen from '../views/LoadsScreen';
 import ItemsScreenWithQty from '../views/ItemsScreenWithQTY';
-
+import AddQuantity from '../views/AddQuantity';
 const Stack = createStackNavigator();
 
 export default function Nav({navigation}) {
-	return (
-		<NavigationContainer>
+  return (
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName="Login"
+        allowFontScaling={false}
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: '#fff',
+            elevation: 0,
+          },
+          headerTintColor: Colors.primary,
+          headerTitleStyle: {
+            fontWeight: 'bold',
+            width: '80%',
+            textAlign: 'center',
+          },
+        }}>
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{headerShown: false}}
+        />
 
-			<Stack.Navigator initialRouteName="DashboardRoutes" allowFontScaling={false}
-				screenOptions={{
-				headerStyle: {
-					backgroundColor: '#fff',
-					elevation: 0,
-				},
-				headerTintColor: Colors.primary,
-				headerTitleStyle: {
-					fontWeight: 'bold',
-					width: '80%',
-					textAlign: 'center',
-				},
-			}}>
+        <Stack.Screen
+          name="Vehicle"
+          component={VehicleSelectScreen}
+          options={{
+            title: 'Select Vehicle',
+          }}
+        />
 
-				<Stack.Screen
-					name="Login"
-					component={LoginScreen}
-					options={{headerShown: false}}
-				/>
-				
-				<Stack.Screen
-					name="Vehicle"
-					component={VehicleSelectScreen}
-					options={{
-						title: 'Select Vehicle',
-					}}
-				/>
-				
-				<Stack.Screen
-					name="Route"
-					component={RouteScreen}
-					options={{title: 'Select Route'}}
-					initialParams={{'vehicleId':'value'}}
-				/>
-				
-				<Stack.Screen
-					name="loads"
-					component={LoadsScreen}
-					options={{title: 'Select Loads'}}
-					initialParams={{'vehicleId':'value'}}
-					
-				/>
-				
-				<Stack.Screen
-					name="Dashboard"
-					component={Dashboard}
-					options={{title: 'Dashboard'}}
-				/>
-				
-				<Stack.Screen
-					name="Profile"
-					component={Profile} // options={{headerShown: false}}
-				/>
+        <Stack.Screen
+          name="Route"
+          component={RouteScreen}
+          options={{title: 'Select Route'}}
+          initialParams={{vehicleId: 'value'}}
+        />
 
-				<Stack.Screen
-					title="Loaded Items"
-					name="Items"
-					component={ItemsScreen}
-					options={
-						{headerShown: false}
-					}
-				/>
+        <Stack.Screen
+          name="loads"
+          component={LoadsScreen}
+          options={{title: 'Select Loads'}}
+          initialParams={{vehicleId: 'value'}}
+        />
 
-				<Stack.Screen
-					title="VehicleScreen"
-					name="VehicleScreen"
-					component={VehicleScreen} // options={{headerShown: false}}
-				/>
-				
-				<Stack.Screen
-					title="Available Routes"
-					name="DashboardRoutes"
-					component={DashboardRoutes} // options={{headerShown: false}}
-				/>
-				
-				<Stack.Screen
-					title="Items"
-					name="ItemsScreenWithQty"
-					component={ItemsScreenWithQty} // options={{headerShown: false}}
-				/>
-			</Stack.Navigator>
-		</NavigationContainer>
-	);
-	}
+        <Stack.Screen
+          name="Dashboard"
+          component={Dashboard}
+          options={{title: 'Dashboard'}}
+        />
+
+        <Stack.Screen
+          name="Profile"
+          component={Profile} // options={{headerShown: false}}
+        />
+
+        <Stack.Screen
+          title="Loaded Items"
+          name="Items"
+          component={ItemsScreen}
+          options={{headerShown: false}}
+        />
+
+        <Stack.Screen
+          title="VehicleScreen"
+          name="VehicleScreen"
+          component={VehicleScreen} // options={{headerShown: false}}
+        />
+
+        <Stack.Screen
+          title="Available Routes"
+          name="DashboardRoutes"
+          component={DashboardRoutes} // options={{headerShown: false}}
+        />
+
+        <Stack.Screen
+          title="Items"
+          name="ItemsScreenWithQty"
+          component={ItemsScreenWithQty} // options={{headerShown: false}}
+        />
+        <Stack.Screen
+          title="AddQuantity"
+          name="AddQuantity"
+          component={AddQuantity} // options={{headerShown: false}}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
