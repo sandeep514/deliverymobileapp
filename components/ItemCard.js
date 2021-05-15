@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {useEffect , useState} from 'react';
 import {View, Text, Image, StyleSheet, Pressable , TextInput ,Button } from 'react-native';
 import {Input} from 'react-native-elements';
@@ -26,7 +27,7 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 		}else{
 			setUpdateQtyofItems((UpdateQtyofItems+1));
 		}
-		console.log(selectedLoadArray);
+		AsyncStorage.setItem('selectedLoadedItemsByQty' , JSON.stringify(selectedLoadArray));
 	}
 	function minusQtyItem(loadName , cardId){
 		let loadedName = loadName+'__'+cardId;
@@ -48,7 +49,7 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 				setUpdateQtyofItems((UpdateQtyofItems-1));
 			}
 		}
-		console.log(selectedLoadArray);
+		AsyncStorage.setItem('selectedLoadedItemsByQty' , JSON.stringify(selectedLoadArray));
 	}
 
 	return (
@@ -71,7 +72,7 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 							{/* <Button title="clickme" onPress={() => {clickme()}}></Button> */}
 						</View>
 						<View style={{width: 87}}>
-							<TextInput style={{color: '#000'}} value={ (UpdateQtyofItems != undefined) ? UpdateQtyofItems.toString() : 0} key={cardId} placeholder="Qty" style={{textAlign: 'center'}} />
+							<TextInput style={{color: '#000'}}  value={ (UpdateQtyofItems != undefined) ? UpdateQtyofItems.toString() : 0} key={cardId} placeholder="Qty" style={{textAlign: 'center'}} />
 						</View>
 						<View style={{backgroundColor: 'red'}}>
 							<Pressable onPress={ () => { minusQtyItem( loadName , cardId ) } } style={{backgroundColor: 'red',padding: 8}}>

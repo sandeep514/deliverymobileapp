@@ -113,6 +113,7 @@ export const SaveVehicleNotes = ( newComment ) => {
 					reject(response.data.error);
 				}
 			});
+			
 		});
 	});
 };
@@ -144,5 +145,34 @@ export const getPriorityDrivers = ( driverId , routeId ) => {
 				reject(response.data.error);
 			}
 		});
+	});
+};
+
+//add tp cart
+export const getCartItemDetails = ( postedData ) => {
+	return new Promise( (resolve , reject) => {
+		apiClient.post('get-cart-item-details' , { data : postedData}).then((response) => {
+			console.log(response.data.data)
+			if(response.data.status == true){
+				resolve(response);
+			}else{
+				reject(response.data.error);
+			}
+		});
+		
+	});
+};
+//Save Order
+export const SaveOrder = ( postedData ) => {
+	return new Promise( (resolve , reject) => {
+		apiClient.post('save-order' , { data : postedData}).then((response) => {
+			console.log(response)
+			if(response.data.status == true){
+				resolve(response);
+			}else{
+				reject(response.data.error);
+			}
+		});
+		
 	});
 };
