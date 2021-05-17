@@ -4,17 +4,22 @@ import {Button, Input} from 'react-native-elements';
 import { BluetoothManager,BluetoothEscposPrinter,BluetoothTscPrinter } from 'react-native-bluetooth-escpos-printer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect } from 'react';
-
+import Signature from 'react-native-signature-canvas';
+import SignatureScreen from 'react-native-signature-canvas';
+import { useRef } from 'react';
 
 var paired = [];
 let totalAmount = 0;
+export default function PDFmanager({navigation , text, onOK}) {
+    const ref = useRef();
 
-export default function PDFmanager({navigation}) {
 	const [ isLoaderActive ,setIsLoaderActive ] = useState(false);
 	const [ isBluetoothEnabled ,setisBluetoothEnabled ] = useState(false);
 	const [ device ,setDevice ] = useState();
 	const [ savedOrderResonce ,setSavedOrderResponce ] = useState();
-
+	const [ remarks ,setRemarks ] = useState('');
+	const [ base64 ,setBase64 ] = useState('');
+	let setBase64Image = '';
 
     useEffect(() => {
         AsyncStorage.getItem('orderSaveReponce').then((result) => {
@@ -41,13 +46,8 @@ export default function PDFmanager({navigation}) {
                     }
                 }
                 // var jsonPairedData = JSON.stringify(paired);
-                // console.log(jsonPairedData);
-                // console.log('Success Find' + paired[0].address);
                 
                 
-                // console.log('---------------');
-                // console.log(paired[0].address);
-                // console.log('---------------');                
                 
                 // setDevice(paired[0].address)
                 // BluetoothManager.connect(paired[0].address).then(
@@ -71,60 +71,103 @@ export default function PDFmanager({navigation}) {
         );
 
     }, []);
+    
+    const handleSignature2 = signature => {
+        let baseImage = (signature).replace('data:image/png;base64,' , '');
+        setBase64Image = baseImage;
+        setBase64(baseImage)
+    };
+    const handleSignature = signature => {
+        let baseImage = (signature).replace('data:image/png;base64,' , '');
+        setBase64Image = baseImage;
+        setBase64(baseImage)
+        handleSignature2(signature)
+    };
+
+    const handleClear = () => {
+        ref.current.clearSignature();
+    }
+
+    const handleConfirm = () => {
+        ref.current.readSignature();
+    }
+
+    const style = `.m-signature-pad--footer {display: none; margin: 0px;}`;
+
+
 	const showToast = (message) => {
 		ToastAndroid.showWithGravityAndOffset(message,ToastAndroid.LONG,ToastAndroid.BOTTOM,0,20);
 	};
     printDesign = async () => {
-        await BluetoothEscposPrinter.printerAlign(
-            BluetoothEscposPrinter.ALIGN.CENTER,
-        );
-        await BluetoothEscposPrinter.setBlob(0);
-        await BluetoothEscposPrinter.printText('welcome\n\r', {
-            encoding: 'GBK',
-            codepage: 0,
-            widthtimes: 3,
-            heigthtimes: 3,
-            fonttype: 1,
-        });
-        await BluetoothEscposPrinter.setBlob(0);
-        await BluetoothEscposPrinter.printText('Print Recipt\n\r', {
-            encoding: 'GBK',
-            codepage: 0,
-            widthtimes: 0,
-            heigthtimes: 0,
-            fonttype: 1,
-        });
-        await BluetoothEscposPrinter.printerAlign(
-            BluetoothEscposPrinter.ALIGN.LEFT,
-        );
-        // await BluetoothEscposPrinter.printText('Price：30\n\r', {});
-        await BluetoothEscposPrinter.printText(
-            'INVOICE: '+savedOrderResonce[0]['invoice'],
+            await BluetoothEscposPrinter.printerAlign(
+                BluetoothEscposPrinter.ALIGN.CENTER,
+            );
+            await BluetoothEscposPrinter.setBlob(0);
+            await BluetoothEscposPrinter.printText('welcome\n\r', {
+                encoding: 'GBK',
+                codepage: 0,
+                widthtimes: 3,
+                heigthtimes: 3,
+                fonttype: 1,
+            });
+            await BluetoothEscposPrinter.setBlob(0);
+            await BluetoothEscposPrinter.printText('Print Recipt\n\r', {
+                encoding: 'GBK',
+                codepage: 0,
+                widthtimes: 0,
+                heigthtimes: 0,
+                fonttype: 1,
+            });
+            await BluetoothEscposPrinter.printerAlign(
+                BluetoothEscposPrinter.ALIGN.CENTER,
+            );
+            // await BluetoothEscposPrinter.printText('Price：30\n\r', {});
+            await BluetoothEscposPrinter.printText(
+                'INVOICE: '+savedOrderResonce[0]['invoice'],
+                {},
+            );
+            await BluetoothEscposPrinter.printText(
+                '\n\r',
+                {},
+            );
+        let columnWidths = [12, 4, 8, 8];
+        await BluetoothEscposPrinter.printColumn(
+            columnWidths,
+                [
+                    BluetoothEscposPrinter.ALIGN.LEFT,
+                    BluetoothEscposPrinter.ALIGN.CENTER,
+                    BluetoothEscposPrinter.ALIGN.CENTER,
+                    BluetoothEscposPrinter.ALIGN.RIGHT,
+                ],
+                ['Item', 'qty', 'Price', 'Amount'],
             {},
         );
+        for(let i = 0 ; i < savedOrderResonce.length ; i++){
+            let sitem = savedOrderResonce[i]['sitem'];
+            let salePrice = savedOrderResonce[i]['sale_price'];
+            let qty = savedOrderResonce[i]['qty'];
+            let amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
+
+            totalAmount = (parseFloat(totalAmount)+parseFloat(amount));
+
+            await BluetoothEscposPrinter.printColumn(
+                columnWidths,
+                [
+                    BluetoothEscposPrinter.ALIGN.LEFT,
+                    BluetoothEscposPrinter.ALIGN.LEFT,
+                    BluetoothEscposPrinter.ALIGN.CENTER,
+                    BluetoothEscposPrinter.ALIGN.RIGHT,
+                ],
+                [sitem, qty, salePrice, amount],
+              {},
+            );
+            await BluetoothEscposPrinter.printText('\n\r', {});
+        }
+
         await BluetoothEscposPrinter.printText(
             '--------------------------------\n\r',
             {},
         );
-    let columnWidths = [12, 4, 8, 8];
-    await BluetoothEscposPrinter.printColumn(
-        columnWidths,
-            [
-                BluetoothEscposPrinter.ALIGN.LEFT,
-                BluetoothEscposPrinter.ALIGN.CENTER,
-                BluetoothEscposPrinter.ALIGN.CENTER,
-                BluetoothEscposPrinter.ALIGN.RIGHT,
-            ],
-            ['Item', 'qty', 'Price', 'Amount'],
-        {},
-    );
-    for(let i = 0 ; i < savedOrderResonce.length ; i++){
-        let sitem = savedOrderResonce[i]['sitem'];
-        let salePrice = savedOrderResonce[i]['sale_price'];
-        let qty = savedOrderResonce[i]['qty'];
-        let amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
-
-        totalAmount = (parseFloat(totalAmount)+parseFloat(amount));
 
         await BluetoothEscposPrinter.printColumn(
             columnWidths,
@@ -134,44 +177,63 @@ export default function PDFmanager({navigation}) {
                 BluetoothEscposPrinter.ALIGN.CENTER,
                 BluetoothEscposPrinter.ALIGN.RIGHT,
             ],
-            [sitem, qty, salePrice, amount],
-          {},
+            ['', '', 'Total: ',(totalAmount).toFixed(2)],
+            {},
         );
         await BluetoothEscposPrinter.printText('\n\r', {});
-    }
 
-    // await BluetoothEscposPrinter.printText(
-    //     '--------------------------------\n\r',
-    //     {},
-    // );
 
-    await BluetoothEscposPrinter.printColumn(
-            columnWidths,
-            [
-                BluetoothEscposPrinter.ALIGN.LEFT,
-                BluetoothEscposPrinter.ALIGN.LEFT,
-                BluetoothEscposPrinter.ALIGN.CENTER,
-                BluetoothEscposPrinter.ALIGN.RIGHT,
-            ],
-            ['', '', 'Total: ',(totalAmount).toFixed(2)],
-          {},
+        //images
+        await BluetoothEscposPrinter.printerAlign(
+            BluetoothEscposPrinter.ALIGN.LEFT,
         );
-    await BluetoothEscposPrinter.printText('\n\r', {});
-  };
+        await BluetoothEscposPrinter.printText('Signature: \n\r', {
+                encoding: 'GBK',
+                codepage: 0,
+                widthtimes: 0,
+                heigthtimes: 0,
+                fonttype: 1,
+            });
+        await BluetoothEscposPrinter.printPic(base64, {width: 100,left: 100,height: 50});
+
+
+        await BluetoothEscposPrinter.printText('\n\r', {});
+         await BluetoothEscposPrinter.printerAlign(
+            BluetoothEscposPrinter.ALIGN.LEFT,
+        );
+        await BluetoothEscposPrinter.printText('Remarks: \n\r', {
+            encoding: 'GBK',
+            codepage: 0,
+            widthtimes: 0,
+            heigthtimes: 0,
+            fonttype: 1,
+        });
+        await BluetoothEscposPrinter.printerAlign(
+           BluetoothEscposPrinter.ALIGN.CENTER,
+       );
+        await BluetoothEscposPrinter.printText(remarks+'\n\r', {
+                encoding: 'GBK',
+                codepage: 0,
+                widthtimes: 1,
+                heigthtimes: 1,
+                fonttype: 1,
+            });
+
+            
+    };
 
     printReceipt = () => {
         BluetoothManager.connect(device).then( (res) => {
-            console.log(res);
             printDesign()
         },(e) => {
-            console.log(e);
         });
     };
+
 
 	
 	return (
         <View style={styles.bodyContainer}>
-            <View style={{ flex: 0.35 ,width: '100%' }}>
+            <View style={{ flex: 0.36 ,width: '100%' }}>
                 <Text style={{fontSize: 20, color: 'black', fontWeight: '700',backgroundColor: 'lightgrey',textAlign: 'center'}}>
                     Invoice
                 </Text>
@@ -187,7 +249,6 @@ export default function PDFmanager({navigation}) {
                 </View>
                     {(savedOrderResonce != undefined) ?
                         savedOrderResonce.map((value , key) => {
-                            console.log(value)
                             return (
                                 <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
                                     <Text style={{ width: 90}}>{value['sitem']}</Text>
@@ -208,19 +269,36 @@ export default function PDFmanager({navigation}) {
                 </View>
             </View>
 
-            <View style={{ flex: 0.3 ,width: '100%' }}>
+            <View style={{ flex: 0.5 ,width: '100%' }}>
                 <Text style={{fontSize: 20, color: 'black', fontWeight: '700',backgroundColor: 'lightgrey',textAlign: 'center'}}>
                     Signature
                 </Text>
+                        <View style={styles.container}>
+                            <SignatureScreen
+                                ref={ref}
+                                onOK={handleSignature} 
+                            />
+                            {/* <View style={styles.row}>
+                                <Button
+                                    title="Clear"
+                                    onPress={handleClear}
+                                />
+                                <Button
+                                title="Confirm"
+                                onPress={handleConfirm}
+                                />
+                            </View> */}
+                        </View>
             </View>
 
-            <View  style={{ flex: 0.3 ,width: '100%' }}>
+            <View  style={{ flex: 0.11 ,width: '100%' }}>
                 <Text style={{fontSize: 20, color: 'black', fontWeight: '700',backgroundColor: 'lightgrey',textAlign: 'center'}}>
                     Remarks
                 </Text>
+                <Input placeholder="Add Remarks" value={remarks} allowFontScaling={false} onChange={(value) => {setRemarks(value.nativeEvent.text)}}/>
             </View>
             <View  style={{ flex: 0.05 ,width: '100%' }}>
-                <Button title="print  test  Receipt" onPress={() => { printReceipt() }} />
+                <Button title="Print" onPress={() => { printReceipt() }} />
             </View>
         </View>
 	);
@@ -230,5 +308,18 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         // justifyContent: 'space-around',
+    },
+    container: {
+        // alignItems: 'center',
+        height: 100,
+        padding: 10,
+        flex: 1
+    },
+    row: {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: 'space-between',
+        width: '100%',
+        alignItems: 'center',
     }
 });
