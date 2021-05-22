@@ -29,6 +29,18 @@ export const getVehicle = () => {
 	})
 }
 
+export const getRoutes = () => {
+	return new Promise( (resolve , reject) => {
+		apiClient.get('get-all-routes').then((res) => {
+			if( res.data.status == true){
+				resolve(res.data.data)
+			}else{
+				reject('No routes available');
+			}
+		})
+	})
+}
+
 // get list loads
 export const getVehicleLoads = () => {
 	return new Promise( (resolve , reject) => {
@@ -152,7 +164,6 @@ export const getPriorityDrivers = ( driverId , routeId ) => {
 export const getCartItemDetails = ( postedData ) => {
 	return new Promise( (resolve , reject) => {
 		apiClient.post('get-cart-item-details' , { data : postedData}).then((response) => {
-			console.log(response.data.data)
 			if(response.data.status == true){
 				resolve(response);
 			}else{

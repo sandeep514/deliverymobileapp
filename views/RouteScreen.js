@@ -2,33 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {Component, useEffect, useState} from 'react';
 import {StyleSheet,Image,View,Dimensions,ScrollView,TouchableHighlight,} from 'react-native';
 import {ListItem} from 'react-native-elements';
+import { getRoutes } from '../api/apiService';
 import MainScreen from '../layout/MainScreen';
 
 const win = Dimensions.get('window');
-const list = [
-	{
-		id : 1,
-		name: 'Tuesday',
-	},
-	{
-		id : 2,
-		name: 'WednessDay',
-	},
-	{
-		id : 3,
-		name: 'Thursday',
-	},
-	{
-		id : 4,
-		name: 'Friday',
-	},
-	{
-		id : 5,
-		name: 'Saturday',
-	},
-];
 
 export default function RouteScreen({navigation , route}) {
+	const [list ,setList] = useState();
 	const [ selectedVehicleNumber , setSelectedVehicleNumber ] = useState();
 
 	useEffect(() => {
@@ -37,7 +17,15 @@ export default function RouteScreen({navigation , route}) {
 		AsyncStorage.setItem('selectedVehicleNo' , selectedVehicleNo.toString());
 		AsyncStorage.setItem('refreshLoad' , 'Dashboard');
 		setSelectedVehicleNumber(selectedVehicleNo);
+
+		getListRoutes();
 	} , [])
+	
+	function getListRoutes ()  {
+		getRoutes().then((res) => {
+			setList(res)
+		});
+	}
 
 	function redirectRoute(selectedRouteId){
 		AsyncStorage.setItem('selectedRoute' , selectedRouteId.toString());
@@ -48,19 +36,25 @@ export default function RouteScreen({navigation , route}) {
 		<MainScreen style={styles.container}>
 			<ScrollView>
 				<View>
-					{list.map((l, i) => (
-						<TouchableHighlight key={i} onPress={() => redirectRoute(l.id) }>
-							<ListItem key={i} bottomDivider>
-								<Image source={require('../assets/images/map.png')} style={styles.Avatar} />
-								<ListItem.Content>
-									<ListItem.Title allowFontScaling={false}>
-										{l.name}
-									</ListItem.Title>
-								</ListItem.Content>
-								<ListItem.Chevron />
-							</ListItem>
-						</TouchableHighlight>
-					))}
+
+					{ (list != undefined)?
+
+						list.map((l, i) => (
+							<TouchableHighlight key={i} onPress={() => redirectRoute(l.id) }>
+								<ListItem key={i} bottomDivider>
+									<Image source={require('../assets/images/map.png')} style={styles.Avatar} />
+									<ListItem.Content>
+										<ListItem.Title allowFontScaling={false}>
+											{l.routno}
+										</ListItem.Title>
+									</ListItem.Content>
+									<ListItem.Chevron />
+								</ListItem>
+							</TouchableHighlight>
+						))
+						:
+						<View></View>
+					}
 				</View>
 			</ScrollView>
 		</MainScreen>

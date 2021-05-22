@@ -24,8 +24,10 @@ export default function PDFmanager({navigation , text, onOK}) {
     useEffect(() => {
         AsyncStorage.getItem('orderSaveReponce').then((result) => {
             setSavedOrderResponce(JSON.parse(result));
+            console.log(JSON.parse(result).length)
             for(let i = 0 ; i < JSON.parse(result).length ; i++){
                 let amount = ((JSON.parse(result)[i]['sale_price'] * JSON.parse(result)[i]['qty']).toFixed(2)).toString();
+                console.log(amount)
                 totalAmount = (parseFloat(totalAmount)+parseFloat(amount));
             }
         })
@@ -148,7 +150,7 @@ export default function PDFmanager({navigation , text, onOK}) {
             let qty = savedOrderResonce[i]['qty'];
             let amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
 
-            totalAmount = (parseFloat(totalAmount)+parseFloat(amount));
+            totalAmount = (parseFloat(totalAmount));
 
             await BluetoothEscposPrinter.printColumn(
                 columnWidths,

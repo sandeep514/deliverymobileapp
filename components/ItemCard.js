@@ -11,6 +11,13 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 	const [ UpdateQtyofItem , setUpdateQtyofItem] = useState({});
 	const [ UpdateQtyofItems , setUpdateQtyofItems] = useState(0);
 
+	function DirectUpdateQTY(loadName , cardId ,qty){
+		selectedLoadArray[loadName+'__'+cardId] = {'value' : qty ,'cardId' : cardId};
+		setUpdateQtyofItem(selectedLoadArray)
+
+			setUpdateQtyofItems((qty));
+		AsyncStorage.setItem('selectedLoadedItemsByQty' , JSON.stringify(selectedLoadArray));
+	}
 	function addQtyItem(loadName , cardId){
 		let loadedName = loadName+'__'+cardId;
 		
@@ -72,7 +79,7 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 							{/* <Button title="clickme" onPress={() => {clickme()}}></Button> */}
 						</View>
 						<View style={{width: 87}}>
-							<TextInput style={{color: '#000'}}  value={ (UpdateQtyofItems != undefined) ? UpdateQtyofItems.toString() : 0} key={cardId} placeholder="Qty" style={{textAlign: 'center'}} />
+							<TextInput keyboardType="numeric" style={{color: '#000'}}  value={ (UpdateQtyofItems != undefined) ? UpdateQtyofItems.toString() : 0} key={cardId} placeholder="Qty" style={{textAlign: 'center'}} onChange={(value) => { (value.nativeEvent.text != '') ? DirectUpdateQTY( loadName , cardId , parseInt(value.nativeEvent.text)) : '' }} />
 						</View>
 						<View style={{backgroundColor: 'red'}}>
 							<Pressable onPress={ () => { minusQtyItem( loadName , cardId ) } } style={{backgroundColor: 'red',padding: 8}}>

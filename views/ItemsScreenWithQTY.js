@@ -58,7 +58,7 @@ export default function ItemsScreenWithQty({navigation}) {
 											<View key={v} style={{flex: 1, flexDirection: 'row',flexWrap: 'wrap',justifyContent : 'space-evenly'}}>
 												{Object.keys(ListItems[key][k]).map((ke ,val) => {
 													return(
-														<ItemCard key={ke} qty="true" backgroundColor="#fff" loadName={key} cardId={ListItems[key][k][ke].id} cardName={ListItems[key][k][ke].name} imageUrl={imagePrefix+''+ListItems[key][k][ke].img} />
+														<ItemCard  key={ke} qty="true" backgroundColor="#fff" loadName={key} cardId={ListItems[key][k][ke].id} cardName={ListItems[key][k][ke].name} imageUrl={imagePrefix+''+ListItems[key][k][ke].img} />
 													)
 												})}
 											</View>

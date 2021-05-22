@@ -22,7 +22,7 @@ export default function Nav({navigation}) {
 	return (
 		<NavigationContainer>
 			<Stack.Navigator
-				initialRouteName="PDFmanager"
+				initialRouteName="Login"
 				allowFontScaling={false}
 				screenOptions={{
 				headerStyle: {
@@ -108,7 +108,7 @@ export default function Nav({navigation}) {
 					title="PDFmanager"
 					name="PDFmanager"
 					component={PDFmanager}
-					options={{headerShown: false}}
+					options={{headerShown: true}}
 				/>
 			</Stack.Navigator>
 		</NavigationContainer>
