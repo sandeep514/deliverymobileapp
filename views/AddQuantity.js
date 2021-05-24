@@ -33,13 +33,15 @@ let selectedBuyerId = '';
 let valuetem = '';
 
 let updatedValue= '';
+let initalPaymentStatus = 'cash';
 export default function AddQuantity({navigation}) {
   	const [data, setData] = useState();
   	// const [totalAmount, setTotalAmount] = useState();
 	const [loadedData , setLoadedData] = useState();
 	const [updatedData , setUpdatedData] = useState();
+	const [loadedActivityIndicator , setLoadedActivityIndicator] = useState(false);
 	const [ActInd , setActInd] = useState(false);
-	const [creaditStatus , setCreditStatus] = useState('cash');
+	const [creaditStatus , setCreditStatus] = useState(initalPaymentStatus);
 	const [saveOrderActivIndictor , setSaveOrderActivIndictor] = useState(false);
 
 	useEffect(() => {
@@ -73,11 +75,12 @@ export default function AddQuantity({navigation}) {
 	
 	function SaveOrders(){
 		setSaveOrderActivIndictor(true)
-		SaveOrder(JSON.stringify(setUpdatedDataArray)).then((res) => {
-			setSaveOrderActivIndictor(false)
-			AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
-			navigation.navigate('PDFmanager');
-		})
+		AsyncStorage.setItem('finalItems' , JSON.stringify(setUpdatedDataArray));
+		// SaveOrder().then((res) => {
+		// 	setSaveOrderActivIndictor(false)
+		// 	AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
+		// })
+		navigation.navigate('PDFmanager');
 	}
 
 	function updateWithNewQty(dnum , itemId , qty ){
@@ -139,25 +142,30 @@ export default function AddQuantity({navigation}) {
 					<View></View>
 				}
 
-				<View style={{flex: 1}}>
-					<View style={{flex: 0.08, justifyContent: 'center',flexDirection: 'row'}}>
-						<View>
-							<Pressable onPress={() => { setCreditStatus('cash') }} style={ (creaditStatus == 'cash') ? styles.activeStatus : styles.deActiveStatus }>
-								<Text style={ (creaditStatus == 'cash') ? styles.activeStatusText : styles.deActiveStatusText }>
-									CASH
-								</Text>
-							</Pressable>
-						</View>
-						<View>
-							<Pressable onPress={() => { setCreditStatus('credit') }} style={ (creaditStatus == 'credit') ? styles.activeStatus : styles.deActiveStatus }>
-								<Text style={ (creaditStatus == 'credit') ? styles.activeStatusText : styles.deActiveStatusText }>
-									CREDIT
-								</Text>
-							</Pressable>
-						</View>
+				{/* <View style={{flex: 0.08, justifyContent: 'center',flexDirection: 'row'}}>
+					<View>
+						<Pressable onPress={() => { setCreditStatus('cash') }} style={ (creaditStatus == 'cash') ? styles.activeStatus : styles.deActiveStatus }>
+							<Text style={ (creaditStatus == 'cash') ? styles.activeStatusText : styles.deActiveStatusText }>
+								CASH
+							</Text>
+						</Pressable>
 					</View>
+					<View>
+						<Pressable onPress={() => { setCreditStatus('credit') }} style={ (creaditStatus == 'credit') ? styles.activeStatus : styles.deActiveStatus }>
+							<Text style={ (creaditStatus == 'credit') ? styles.activeStatusText : styles.deActiveStatusText }>
+								CREDIT
+							</Text>
+						</Pressable>
+					</View>
+				</View> */}
+				<View style={{flex: 1}}>
 					<ScrollView>
-						{(data != undefined)?
+
+						{( setLoadedActivityIndicator == true ) ? 
+						<ActivityIndicator color={Colors.primary} size="large" > </ActivityIndicator>
+							
+						:
+							(data != undefined)?
 							Object.values(data).map((value , key) => {
 								{currentSelectedLoadName = Object.keys(value)[0]}
 								return (
@@ -192,7 +200,8 @@ export default function AddQuantity({navigation}) {
 														<TextInput keyboardType="numeric" placeholder="Qty" value={valuetem} style={styles.textInput} placeholder="QTY" onEndEditing={(value) => { updateQty(currentSelectedLoadName ,currentSelectedId , value.nativeEvent.text) } }/>
 
 														<TextInput placeholder="Price" value={val.sale_price} style={styles.textInput} placeholder="PRICE" />
-														<Text style={{display: 'none'}}>{setTotalAmount = (setTotalAmount + (val.order_qty * val.sale_price) )}</Text>
+														<Text style={{ paddingHorizontal: 10,paddingVertical: 16,backgroundColor: '#ededed',borderWidth: 1 , borderColor: Colors.primary }}>{ (valuetem * val.sale_price) }</Text>
+
 													</View>
 												</View>
 											)
@@ -202,11 +211,14 @@ export default function AddQuantity({navigation}) {
 							})
 						:
 							<View></View>
+						
 						}
+						
+						
 					</ScrollView>
 				</View>
 				<View style={{borderTopColor: 'lightgrey' , borderTopWidth: 1}}>
-					<Pressable style={{padding: 16,backgroundColor:Colors.primary,flexDirection: 'row',justifyContent: 'center'}}><Text style={{textAlign: 'center',color: 'white',fontSize: 20}} onPress={() => { SaveOrders() }}>Save Order </Text>
+					<Pressable style={{padding: 16,backgroundColor:Colors.primary,flexDirection: 'row',justifyContent: 'center'}}><Text style={{textAlign: 'center',color: 'white',fontSize: 20}} onPress={() => { SaveOrders() }}>Proceed to place order</Text>
 					{(saveOrderActivIndictor == true) ?
 						<Text ><ActivityIndicator size="small" color="white"></ActivityIndicator></Text>
 					:

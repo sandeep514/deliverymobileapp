@@ -75,9 +75,13 @@ export default function ItemsScreenWithQty({navigation}) {
 			<Pressable 	
 				onPress={() => { 
 					AsyncStorage.getItem('selectedLoadedItemsByQty').then( (value) => {
-						console.log( JSON.parse(value) );
+						if( Object.keys(JSON.parse(value)).length > 0){
+							navigation.navigate('AddQuantity');
+						}else{
+							alert("No item selected.");
+						}
+
 					}) 
-					navigation.navigate('AddQuantity');
 				}}
 				style={{bottom : 10, position: 'absolute',justifyContent : 'center',padding:10 ,height: 70, width: 70,backgroundColor: Colors.primary,borderRadius: 100, right : 10}}
 			>

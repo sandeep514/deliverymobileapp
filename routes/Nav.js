@@ -22,7 +22,7 @@ export default function Nav({navigation}) {
 	return (
 		<NavigationContainer>
 			<Stack.Navigator
-				initialRouteName="Login"
+				initialRouteName="ItemsScreenWithQty"
 				allowFontScaling={false}
 				screenOptions={{
 				headerStyle: {

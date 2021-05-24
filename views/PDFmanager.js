@@ -7,9 +7,13 @@ import { useEffect } from 'react';
 import Signature from 'react-native-signature-canvas';
 import SignatureScreen from 'react-native-signature-canvas';
 import { useRef } from 'react';
+import { SaveOrder } from '../api/apiService';
+import {Colors} from './../components/Colors';
 
 var paired = [];
 let totalAmount = 0;
+let setUpdatedDataArray = [];
+
 export default function PDFmanager({navigation , text, onOK}) {
     const ref = useRef();
 
@@ -19,15 +23,16 @@ export default function PDFmanager({navigation , text, onOK}) {
 	const [ savedOrderResonce ,setSavedOrderResponce ] = useState();
 	const [ remarks ,setRemarks ] = useState('');
 	const [ base64 ,setBase64 ] = useState('');
+    const [creaditStatus , setCreditStatus] = useState('cash');
+	const [saveOrderActivIndictor , setSaveOrderActivIndictor] = useState(false);
+
 	let setBase64Image = '';
 
     useEffect(() => {
-        AsyncStorage.getItem('orderSaveReponce').then((result) => {
+        AsyncStorage.getItem('finalItems').then((result) => {
             setSavedOrderResponce(JSON.parse(result));
-            console.log(JSON.parse(result).length)
             for(let i = 0 ; i < JSON.parse(result).length ; i++){
                 let amount = ((JSON.parse(result)[i]['sale_price'] * JSON.parse(result)[i]['qty']).toFixed(2)).toString();
-                console.log(amount)
                 totalAmount = (parseFloat(totalAmount)+parseFloat(amount));
             }
         })
@@ -226,21 +231,66 @@ export default function PDFmanager({navigation , text, onOK}) {
 
     printReceipt = () => {
         BluetoothManager.connect(device).then( (res) => {
+            SaveOrder().then((res) => {
+                AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
+            })
+
             printDesign()
         },(e) => {
         });
     };
-
+    function changeCreditStatus(status) {
+		setCreditStatus(status)
+		console.log(status)
+	}
+    function SaveOrders(){
+        AsyncStorage.getItem('finalItems').then((res) => {
+            let data = JSON.parse(res)
+            data.push({'type' : creaditStatus});
+            console.log(data)
+        })
+		// setSaveOrderActivIndictor(true)
+        
+		// SaveOrder().then((res) => {
+        //     console.log(res);
+        //     // printReceipt()
+		// 	// setSaveOrderActivIndictor(false)
+		// 	// AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
+		// })
+	}
 
 	
 	return (
         <View style={styles.bodyContainer}>
-            <View style={{ flex: 0.36 ,width: '100%' }}>
+            <View style={{flex: 0.06, justifyContent: 'center',flexDirection: 'row'}}>
+                <View>
+                    <Pressable onPress={() => { setCreditStatus('cash') }} style={ (creaditStatus == 'cash') ? styles.activeStatus : styles.deActiveStatus }>
+                        <Text style={ (creaditStatus == 'cash') ? styles.activeStatusText : styles.deActiveStatusText }>
+                            CASH
+                        </Text>
+                    </Pressable>
+                </View>
+                <View>
+                    <Pressable onPress={() => { setCreditStatus('credit') }} style={ (creaditStatus == 'credit') ? styles.activeStatus : styles.deActiveStatus }>
+                        <Text style={ (creaditStatus == 'credit') ? styles.activeStatusText : styles.deActiveStatusText }>
+                            CREDIT
+                        </Text>
+                    </Pressable>
+                </View>
+                <View>
+                    <Pressable onPress={() => { setCreditStatus('bank') }} style={ (creaditStatus == 'bank') ? styles.activeStatus : styles.deActiveStatus }>
+                        <Text style={ (creaditStatus == 'bank') ? styles.activeStatusText : styles.deActiveStatusText }>
+                            BANK TRANSFER
+                        </Text>
+                    </Pressable>
+                </View>
+            </View>
+            <View style={{ flex: 0.3 ,width: '100%' }}>
                 <Text style={{fontSize: 20, color: 'black', fontWeight: '700',backgroundColor: 'lightgrey',textAlign: 'center'}}>
                     Invoice
                 </Text>
                 <Text style={{ fontSize: 30,textAlign: 'center'}}>Welcome</Text>
-                <Text style={{ fontSize: 15,textAlign: 'center'}}>INVOICE: {(savedOrderResonce != undefined)? savedOrderResonce[0]['invoice'] : ''}</Text>
+                {/* <Text style={{ fontSize: 15,textAlign: 'center'}}>INVOICE: {(savedOrderResonce != undefined)? savedOrderResonce[0]['invoice'] : ''}</Text> */}
                 <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,marginTop: 20,borderBottomColor:'black',borderTopColor:'transparent',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1 }}>
                     <Text style={{fontWeight: 'bold',width: 100}}>Item</Text>
                     <Text style={{fontWeight: 'bold'}}>Qty</Text>
@@ -300,7 +350,7 @@ export default function PDFmanager({navigation , text, onOK}) {
                 <Input placeholder="Add Remarks" value={remarks} allowFontScaling={false} onChange={(value) => {setRemarks(value.nativeEvent.text)}}/>
             </View>
             <View  style={{ flex: 0.05 ,width: '100%' }}>
-                <Button title="Print" onPress={() => { printReceipt() }} />
+                <Button title="Print" onPress={() => { SaveOrders() }} />
             </View>
         </View>
 	);
@@ -323,5 +373,29 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         width: '100%',
         alignItems: 'center',
-    }
+    },
+	activeStatus: {
+		backgroundColor: Colors.primary,
+		paddingHorizontal: 18,
+		borderRadius: 15,
+		paddingVertical: 10,
+		borderColor: Colors.primary ,
+		borderWidth: 2
+	},
+	deActiveStatus: {
+		paddingHorizontal: 18,
+		borderRadius: 15,
+		paddingVertical: 10,
+		marginHorizontal: 10 ,
+		borderColor: Colors.primary ,
+		borderWidth: 2
+	},
+	activeStatusText: {
+		color: 'white',
+        fontSize: 12
+	},
+	deActiveStatusText: {
+		color: Colors.primary,
+        fontSize: 12
+	},
 });

@@ -42,10 +42,16 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 		if( selectedLoadArray[loadedName] != undefined ){
 			if( selectedLoadArray[loadedName].value != 0 ){
 				selectedLoadArray[loadedName].value = (selectedLoadArray[loadedName].value-1);
+				if( (selectedLoadArray[loadedName].value) <= 0 ){
+					delete selectedLoadArray[loadedName];
+				}
 				setUpdateQtyofItem(selectedLoadArray)
 			}
 		}else{
-			selectedLoadArray[loadName+'__'+cardId] = {'value' : 0 ,'cardId' : cardId};
+			// if( (selectedLoadArray[loadedName].value-1) <= 0 ){
+			// 	delete selectedLoadArray[loadedName];
+			// }
+			// selectedLoadArray[loadName+'__'+cardId] = {'value' : 0 ,'cardId' : cardId};
 			setUpdateQtyofItem(selectedLoadArray)
 		}
 
@@ -56,6 +62,7 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 				setUpdateQtyofItems((UpdateQtyofItems-1));
 			}
 		}
+
 		AsyncStorage.setItem('selectedLoadedItemsByQty' , JSON.stringify(selectedLoadArray));
 	}
 
