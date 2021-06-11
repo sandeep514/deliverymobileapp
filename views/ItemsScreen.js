@@ -1,6 +1,6 @@
 import React , { useEffect , useState} from 'react';
 import { ActivityIndicator } from 'react-native';
-import {View, Text, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet,Dimensions} from 'react-native';
 import {ScrollView} from 'react-native-gesture-handler';
 import { getItemsByVehicleAndLoads, imagePrefix } from '../api/apiService';
 import {Colors} from '../components/Colors';

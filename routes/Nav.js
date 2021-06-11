@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer , DarkTheme} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 //Screens
 
@@ -16,13 +16,16 @@ import LoadsScreen from '../views/LoadsScreen';
 import ItemsScreenWithQty from '../views/ItemsScreenWithQTY';
 import AddQuantity from '../views/AddQuantity';
 import PDFmanager from '../views/PDFmanager';
+import AllInvoice from '../views/AllInvoice';
+import { View, Text, Button, Image } from 'react-native';
+
 const Stack = createStackNavigator();
 
 export default function Nav({navigation}) {
 	return (
-		<NavigationContainer>
+		<NavigationContainer theme={DarkTheme}>
 			<Stack.Navigator
-				initialRouteName="ItemsScreenWithQty"
+				initialRouteName="AllInvoice"
 				allowFontScaling={false}
 				screenOptions={{
 				headerStyle: {
@@ -56,6 +59,11 @@ export default function Nav({navigation}) {
 					options={{title: 'Select Route'}}
 					initialParams={{vehicleId: 'value'}}
 				/>
+				<Stack.Screen
+					name="AllInvoice"
+					component={AllInvoice}
+					options={{title: 'List Invoices'}}
+				/>
 
 				<Stack.Screen
 					name="loads"
@@ -67,7 +75,16 @@ export default function Nav({navigation}) {
 				<Stack.Screen
 					name="Dashboard"
 					component={Dashboard}
-					options={{title: 'Dashboard'}}
+					options={{title: 'Dashboard', 
+						headerRight: () => (
+							<Button
+								onPress={() => alert('This is a button!')}
+								title="All Invoices"
+								color={Colors.primary}
+								buttonStyle={{marginRight: 100}}
+							/>
+						),
+					}}
 				/>
 
 				<Stack.Screen
@@ -97,18 +114,20 @@ export default function Nav({navigation}) {
 				<Stack.Screen
 					title="Items"
 					name="ItemsScreenWithQty"
-					component={ItemsScreenWithQty} // options={{headerShown: false}}
+					component={ItemsScreenWithQty} 
+					options={{title: 'Item Screen Qty'}}
 				/>
 				<Stack.Screen
 					title="AddQuantity"
 					name="AddQuantity"
-					component={AddQuantity} // options={{headerShown: false}}
+					component={AddQuantity} 
+					options={{title: 'Add Quantity'}}
 				/>
 				<Stack.Screen
-					title="PDFmanager"
+					title="PDF manager"
 					name="PDFmanager"
 					component={PDFmanager}
-					options={{headerShown: true}}
+					options={{headerShown: true , title : 'Invoice'}}
 				/>
 			</Stack.Navigator>
 		</NavigationContainer>

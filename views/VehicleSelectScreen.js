@@ -6,6 +6,8 @@ import {
   Dimensions,
   ScrollView,
   TouchableHighlight,
+  ActivityIndicator,
+  Text
 } from 'react-native';
 import {Colors} from './../components/Colors';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -18,11 +20,15 @@ const win = Dimensions.get('window');
 
 export default function VehicleSelectScreen({navigation}) {
 	const [data , setData] = useState();
+	const [loader , setLoader] = useState(false);
 	
 	useEffect( () => {
+		setLoader(true)
 		getVehicle().then( (res) => {
+			setLoader(false)
 			setData(res);
 		} , (err) => {
+			setLoader(false)
 		});	
 	}, [])
 
@@ -30,6 +36,14 @@ export default function VehicleSelectScreen({navigation}) {
 		<MainScreen>
 			<ScrollView>
 				<View>
+					{( loader == true )?
+						<View>
+							<ActivityIndicator color={Colors.primary} size="large" />
+							</View>
+					:
+						<View></View>
+					}
+
 					{ ( data != undefined ) ?
 						data.map((l, i) => (
 							<TouchableHighlight key={i} onPress={() => {

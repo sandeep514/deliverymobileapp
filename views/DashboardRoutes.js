@@ -29,6 +29,7 @@ const list = [
         const [listRoutes , setListRoutes] = useState();
         const [hasRoutes , setHasRoutes] = useState(false);
         useEffect(() => {
+            AsyncStorage.setItem('selectedLoadedItemsByQty',JSON.stringify({}));
             getRoutes()
             AsyncStorage.getItem('location').then( (data) => {
                 let currentLoc = JSON.parse(data)
@@ -90,11 +91,11 @@ const list = [
                     </View>
 
 
-                    <View style={styles.refreshBottom}>
+                    {/* <View style={styles.refreshBottom}>
                         <Pressable onPress={() => { getLocation() }}>
                             <Icon name="refresh" type='font-awesome' color={Colors.primary}/>
                         </Pressable>
-                    </View>
+                    </View> */}
                     <View style={styles.nextButton}>
                         <Pressable onPress={ () => {  navigation.navigate('ItemsScreenWithQty') }}>
                             <Icon name="chevron-right" type='font-awesome' color="white"/>

@@ -3,6 +3,10 @@ import apiClient from './client';
 
 export const imagePrefix = 'https://staging.tauruspress.co.uk/';
 
+export const  generateRandString = () => {
+	return (Math.random() * (9999 - 1) + 1).toFixed(0);
+}
+
 export const checkLogin = ( postedData ) => {
 	return new Promise( (resolve , reject) => {
 		apiClient.post('driver-login' , { username : postedData.username , password : postedData.password}).then((response) => {
@@ -151,7 +155,19 @@ export const getPriorityDrivers = ( driverId , routeId ) => {
 		console.log(driverId , routeId);
 		apiClient.get( 'get-buyer-priortity-by-driver/'+driverId+'/'+routeId ).then((response) => {
 			if(response.data.status == true){
-			
+				resolve(response);
+			}else{
+				reject(response.data.error);
+			}
+		});
+	});
+};
+
+//get Today sale
+export const getListInvoices = ( vehicheNumber , driverId ) => {
+	return new Promise( (resolve , reject) => {
+		apiClient.get( 'get-sales-details/'+vehicheNumber+'/'+driverId ).then((response) => {
+			if(response.data.status == true){
 				resolve(response);
 			}else{
 				reject(response.data.error);

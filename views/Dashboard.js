@@ -17,7 +17,7 @@ import MainScreen from '../layout/MainScreen';
 import DashboardCard from '../components/DashboardCard';
 import { useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getTodaySale, getVehicleLoadCount } from '../api/apiService';
+import { generateRandString, getTodaySale, getVehicleLoadCount } from '../api/apiService';
 import { ActivityIndicator } from 'react-native';
 import GetLocation from 'react-native-get-location'
 
@@ -32,7 +32,6 @@ export default function Dashboard({navigation , route}) {
 		GetLocation.getCurrentPosition({enableHighAccuracy: true,timeout: 10000,
 		}).then(location => {
 			AsyncStorage.setItem( 'location' , JSON.stringify(location));
-			console.log(location)
 		}).catch(error => {
 			const { code, message } = error;
 		})
@@ -123,29 +122,29 @@ export default function Dashboard({navigation , route}) {
 			<View style={styles.itemListSection}>
 				<ScrollView vertical='true'>
 					{(SalesOfDay != undefined) ?
-						SalesOfDay.map((l, i) => (
-							<TouchableHighlight key={l.id}>
-								<ListItem bottomDivider key={l.id}>
-									<ListItem.Content>
-										<ListItem.Title style={{fontSize: 14}} allowFontScaling={false}>
-											{l.buyer}
+						Object.values(SalesOfDay).map((l, i) => (
+							<TouchableHighlight key={generateRandString()}>
+								<ListItem bottomDivider key={generateRandString()}>
+									<ListItem.Content key={generateRandString()}>
+										<ListItem.Title key={generateRandString()} style={{fontSize: 14}} allowFontScaling={false}>
+											{l[0].buyer}
 										</ListItem.Title>
 										<ListItem.Subtitle allowFontScaling={false} >
-											<Text style={{fontSize: 10}}>{l.sitem}</Text>
+											<Text style={{fontSize: 10}}>{l[0].sitem}</Text>
 										</ListItem.Subtitle>
 										<ListItem.Subtitle allowFontScaling={false} >
-											<Text style={{fontSize: 11}}>{l.sale_price} x {l.qty}</Text>	
+											<Text style={{fontSize: 11}}>{l[0].sale_price} x {l[0].qty}</Text>	
 										</ListItem.Subtitle>
 									</ListItem.Content>
 									<View>
-										<Text >£ {(l.sale_price * l.qty).toFixed(2)}</Text>
+										<Text >£ {(l[0].sale_price * l[0].qty).toFixed(2)}</Text>
 									</View>
 								</ListItem>
 							</TouchableHighlight>
 						))
 					: 
 						<View>
-							<ActivityIndicator sizw="large" color={Colors.primary} />
+							<ActivityIndicator size="large" color={Colors.primary} />
 						</View>
 					}
 				</ScrollView>

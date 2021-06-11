@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {useEffect , useState} from 'react';
-import {View, Text, Image, StyleSheet, Pressable , TextInput ,Button } from 'react-native';
+import {View, Text, Image, StyleSheet, Pressable , TextInput ,Button,Dimensions } from 'react-native';
 import {Input} from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {Colors} from '../components/Colors';
@@ -10,7 +10,10 @@ let selectedLoadArray = {};
 export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, styleData, qty, cardId ,loadName }) => {
 	const [ UpdateQtyofItem , setUpdateQtyofItem] = useState({});
 	const [ UpdateQtyofItems , setUpdateQtyofItems] = useState(0);
+	const win = Dimensions.get('window');
 
+	// useEffect(() => {
+	// } , [])
 	function DirectUpdateQTY(loadName , cardId ,qty){
 		selectedLoadArray[loadName+'__'+cardId] = {'value' : qty ,'cardId' : cardId};
 		setUpdateQtyofItem(selectedLoadArray)
@@ -34,6 +37,7 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 		}else{
 			setUpdateQtyofItems((UpdateQtyofItems+1));
 		}
+		
 		AsyncStorage.setItem('selectedLoadedItemsByQty' , JSON.stringify(selectedLoadArray));
 	}
 	function minusQtyItem(loadName , cardId){
@@ -69,7 +73,7 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 	return (
 		(qty == 'true') ?
 			<View>
-				<View style={[styles.cardBackground, {backgroundColor: backgroundColor,height: 225} , styleData]}>
+				<View style={[(win.width > 550) ? styles.cardBackgroundtab : styles.cardBackground, {backgroundColor: backgroundColor} , styleData]}>
 					<View style={styles.itemImageContainer}>
 						<Image source={{uri:imageUrl}} style={styles.itemImage} />
 						<Text style={styles.cardName ,{height: 'auto',fontSize: 12,marginTop: 6,marginBottom: 6}} allowFontScaling={false}>
@@ -80,24 +84,24 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 					</View>
 					<View style={{flex:1 ,flexDirection: 'row', backgroundColor: '#ebedf087',width: '100%' }} >
 						<View >
-							<Pressable onPress={ () => { addQtyItem( loadName , cardId ) } } style={{backgroundColor: Colors.primary,padding: 8}}>
-								<Icon name='plus' type='font-awesome' style={{fontSize: 25,color: 'white', textAlign: 'center'}} />
+							<Pressable onPress={ () => { minusQtyItem( loadName , cardId ) } } style={{backgroundColor: 'red',padding: 8}}>
+								<Icon name='minus' type='font-awesome' style={{fontSize: 25,color: 'white', textAlign: 'center'}} />
 							</Pressable>
 							{/* <Button title="clickme" onPress={() => {clickme()}}></Button> */}
 						</View>
-						<View style={{width: 87}}>
-							<TextInput keyboardType="numeric" style={{color: '#000'}}  value={ (UpdateQtyofItems != undefined) ? UpdateQtyofItems.toString() : 0} key={cardId} placeholder="Qty" style={{textAlign: 'center'}} onChange={(value) => { (value.nativeEvent.text != '') ? DirectUpdateQTY( loadName , cardId , parseInt(value.nativeEvent.text)) : '' }} />
+						<View style={ (win.width > 550) ? {width: '55%'} : {width: 87} }>
+							<TextInput keyboardType="numeric"  value={ (UpdateQtyofItems != undefined) ? UpdateQtyofItems.toString() : 0} key={cardId} placeholder="Qty" style={{textAlign: 'center',color: '#000'}} onChange={(value) => { (value.nativeEvent.text != '') ? DirectUpdateQTY( loadName , cardId , parseInt(value.nativeEvent.text)) : '' }} />
 						</View>
-						<View style={{backgroundColor: 'red'}}>
-							<Pressable onPress={ () => { minusQtyItem( loadName , cardId ) } } style={{backgroundColor: 'red',padding: 8}}>
-								<Icon name='minus' type='font-awesome' style={{fontSize: 25,color: 'white', textAlign: 'center'}} />
+						<View style={{}}>
+							<Pressable onPress={ () => { addQtyItem( loadName , cardId ) } } style={{backgroundColor: Colors.primary,padding: 8}}>
+								<Icon name='plus' type='font-awesome' style={{fontSize: 25,color: 'white', textAlign: 'center'}} />
 							</Pressable>
 						</View>
 					</View>
 				</View>
 			</View>
 		: 
-			<Pressable onPress={onPress} style={[styles.cardBackground, {backgroundColor: backgroundColor} , styleData]}>
+			<Pressable onPress={onPress} style={[(win.width > 550) ? styles.cardBackgroundtab : styles.cardBackground, {backgroundColor: backgroundColor} , styleData]}>
 				<View style={styles.itemImageContainer}>
 					<Image source={{uri:imageUrl}} style={styles.itemImage} />
 				</View>
@@ -143,15 +147,27 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		borderRadius: 100,
 	},
-	cardBackground: {
-		width: widthToDp('40%'),
-		height: heightToDp('25%'),
+	cardBackgroundtab: {
+		width: widthToDp('20%'),
+		height: heightToDp('12%'),
 		borderRadius: 8,
 		marginTop: 15,
 		marginHorizontal: 5,
 		alignItems: 'center',
 		elevation: 10,
 		overflow: 'hidden',
+		height: 310
+	},
+	cardBackground: {
+		width: widthToDp('40%'),
+		height: heightToDp('23%'),
+		borderRadius: 8,
+		marginTop: 15,
+		marginHorizontal: 5,
+		alignItems: 'center',
+		elevation: 10,
+		overflow: 'hidden',
+		height: 225
 	},
 	itemImage: {
 		// flex: 1,

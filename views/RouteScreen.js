@@ -1,14 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {Component, useEffect, useState} from 'react';
-import {StyleSheet,Image,View,Dimensions,ScrollView,TouchableHighlight,} from 'react-native';
+import {StyleSheet,Image,View,Dimensions,ScrollView,TouchableHighlight, ActivityIndicator,} from 'react-native';
 import {ListItem} from 'react-native-elements';
+
 import { getRoutes } from '../api/apiService';
+import { Colors } from '../components/Colors';
 import MainScreen from '../layout/MainScreen';
 
 const win = Dimensions.get('window');
 
 export default function RouteScreen({navigation , route}) {
 	const [list ,setList] = useState();
+	const [loader ,setLoader] = useState(false);
 	const [ selectedVehicleNumber , setSelectedVehicleNumber ] = useState();
 
 	useEffect(() => {
@@ -22,8 +25,10 @@ export default function RouteScreen({navigation , route}) {
 	} , [])
 	
 	function getListRoutes ()  {
+		setLoader(true)
 		getRoutes().then((res) => {
 			setList(res)
+			setLoader(false)
 		});
 	}
 
@@ -36,6 +41,13 @@ export default function RouteScreen({navigation , route}) {
 		<MainScreen style={styles.container}>
 			<ScrollView>
 				<View>
+					{( loader == true )?
+						<View>
+							<ActivityIndicator color={Colors.primary} size="large" />
+							</View>
+					:
+						<View></View>
+					}
 
 					{ (list != undefined)?
 

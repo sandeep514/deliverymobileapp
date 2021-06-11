@@ -20,6 +20,7 @@ export default function ItemsScreenWithQty({navigation}) {
 	const [requestSent , setRequestSent] = useState(false);
 
 	useEffect(() => {
+		AsyncStorage.setItem('selectedLoadedItemsByQty',JSON.stringify({}));
 		getItems();
 	} , []);
 	function getItems () {
@@ -75,7 +76,7 @@ export default function ItemsScreenWithQty({navigation}) {
 			<Pressable 	
 				onPress={() => { 
 					AsyncStorage.getItem('selectedLoadedItemsByQty').then( (value) => {
-						if( Object.keys(JSON.parse(value)).length > 0){
+						if( Object.keys(JSON.parse(value)).length > 0 ){
 							navigation.navigate('AddQuantity');
 						}else{
 							alert("No item selected.");

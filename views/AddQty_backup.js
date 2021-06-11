@@ -31,11 +31,13 @@ let selectedVehicle = '';
 let selectedRoute = '';
 let selectedDriver = '';
 let selectedBuyerId = '';
-let valuetem = '';
+let valuetem = {};
 
 let updatedValue= '';
 let initalPaymentStatus = 'cash';
-export default function AddQuantity({navigation}) {
+let myNewDataFromApi = {};
+export default function AddQty_backup({navigation}) {
+
   	const [data, setData] = useState();
   	// const [totalAmount, setTotalAmount] = useState();
 	const [loadedData , setLoadedData] = useState();
@@ -44,6 +46,7 @@ export default function AddQuantity({navigation}) {
 	const [ActInd , setActInd] = useState(false);
 	const [creaditStatus , setCreditStatus] = useState(initalPaymentStatus);
 	const [saveOrderActivIndictor , setSaveOrderActivIndictor] = useState(false);
+	const [valueData , setValueData] = useState();
 	const ref_input2 = useRef();
 
 	useEffect(() => {
@@ -56,6 +59,14 @@ export default function AddQuantity({navigation}) {
 			setLoadedData(JSON.parse(data));
 			getCartItemDetails(data).then((res) => {
 				setData(res.data.data);
+				myNewDataFromApi = res.data.data;
+				for(var i = 0 ; i < myNewDataFromApi.length ; i++){
+					valuetem[ Object.keys(myNewDataFromApi[i])+'_'+Object.values(myNewDataFromApi[i])[0].id ] = Object.values(myNewDataFromApi[i])[0].order_qty;
+					setValueData(valuetem);
+					console.log(valuetem)
+				} 
+				// setValueData(valuetem) 
+
 				setLoadedActivityIndicator(false)
 			});
 		})
@@ -73,6 +84,15 @@ export default function AddQuantity({navigation}) {
 		})
 	}
 
+	function getUpdatedData(){
+		AsyncStorage.getItem('selectedLoadedItemsByQty').then((data) => {
+			console.log("jik")
+			getCartItemDetails(data).then((res) => {
+				myNewDataFromApi = res.data.data;
+			});
+		})
+	}
+
 	function generateRandString(){
 	    return (Math.random() * (9999 - 1) + 1).toFixed(0);
 	}
@@ -87,23 +107,21 @@ export default function AddQuantity({navigation}) {
 				}
 			}
 			resolve(Object.values(processedData))
+			// console.log(data)
 		})
 	}
 	function SaveOrders(){
 		setSaveOrderActivIndictor(true)
 		AsyncStorage.setItem('finalItems' , JSON.stringify(setUpdatedDataArray));
-
 		updateRecords(setUpdatedDataArray).then((res) => {
 			let data = [];
 	
 			data.push(res)
 			data.push({'type' : creaditStatus});
-			console.log("jnjinik")
-			console.log(JSON.stringify(data))
-			console.log("jnjinik")
-
+			console.log(data)
 			SaveOrder(JSON.stringify(data)).then((res) => {
 				setSaveOrderActivIndictor(false)
+				console.log(res)
 				AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
 				AsyncStorage.setItem('orderSaveBuyer', JSON.stringify(res.data.buyer));
 				navigation.navigate('PDFmanager');
@@ -131,15 +149,20 @@ export default function AddQuantity({navigation}) {
 	}
 
 	function updateQty(dnum , itemId , qty ){
+
 		let myData = Object.values(data);
 		let newQty = 0;
 		
 		AsyncStorage.getItem('selectedLoadedItemsByQty').then((res) => {
 			let objectData = JSON.parse(res);
 			if( dnum+'__'+itemId in objectData){
+				console.log("hjik")
 				objectData[dnum+'__'+itemId]['value'] = qty;
 				AsyncStorage.setItem('selectedLoadedItemsByQty' ,JSON.stringify(objectData));
 			}
+			AsyncStorage.getItem('selectedLoadedItemsByQty').then((res) => {
+				console.log(res)
+			});
 		});
 		if( qty != '' ){
 			newQty = qty
@@ -147,36 +170,50 @@ export default function AddQuantity({navigation}) {
 		for( let i= 0 ; i < myData.length; i++ ){
 			if( myData[i][dnum].id == itemId){
 				myData[i][dnum].order_qty = newQty;
-				
-				setData(myData)
+				getUpdatedData();
+				// myNewDataFromApi = myData;
+				// AsyncStorage.setItem('selectedLoadedItemsByQty' ,JSON.stringify(myData));
+				// setData(myData)
 			}
 		}
-	}
-	function updatePrice(dnum , itemId , value ){
-		let myData = Object.values(data);
-		let newQty = 0;
-		
-		AsyncStorage.getItem('selectedLoadedItemsByQty').then((res) => {
-			let objectData = JSON.parse(res);
-			if( dnum+'__'+itemId in objectData){
-				objectData[dnum+'__'+itemId]['price'] = value;
-				AsyncStorage.setItem('selectedLoadedItemsByQty' ,JSON.stringify(objectData));
-			}
-		});
-		if( value != '' ){
-			newQty = value
-		}
-		for( let i= 0 ; i < myData.length; i++ ){
-			if( myData[i][dnum].id == itemId){
-				myData[i][dnum].sale_price = newQty;
-				
-				setData(myData)
-			}
-		}
+
+		// ref_input2.current.focus()
+		// AsyncStorage.getItem('selectedLoadedItemsByQty').then((res) => {
+		// 	let objectData = JSON.parse(res);
+		// 	console.log("jnkkk");
+
+		// 		if( dnum+'__'+itemId in objectData){
+
+		// 			objectData[dnum+'__'+itemId]['value'] = qty;
+		// 			console.log("jnkk");
+		// 			// setData(data);
+		// 			AsyncStorage.setItem('selectedLoadedItemsByQty' ,JSON.stringify(objectData));
+		// 			AsyncStorage.getItem('selectedLoadedItemsByQty').then((data) => {
+		// 				setLoadedData(JSON.parse(data));
+		// 				getCartItemDetails(data).then((res) => {
+		// 					console.log("jnk");
+		// 					setData(res.data.data);
+		// 				});
+		// 			})
+		// 		}
+		// })
+
+		// for(let i = 0 ; i < data.length ; i++){
+		// 	if( dnum in data[i]){
+		// 		data[i][dnum]['order_qty'] = qty;
+		// 		setData(data);
+		// 	}
+		// }
 	}
 	function changeCreditStatus(status) {
 		setCreditStatus(status)
 	}
+	// function SaveOrders(){
+    //     AsyncStorage.getItem('finalItems').then((res) => {
+            
+    //     })
+        
+	// }
 	return (
 		<MainScreen>
 			<View style={{flex:1}}>
@@ -221,15 +258,14 @@ export default function AddQuantity({navigation}) {
 						</View>
 							
 						:
-							(data != undefined)?
-							Object.values(data).map((value , key) => {
+							(myNewDataFromApi != undefined)?
+							Object.values(myNewDataFromApi).map((value , key) => {
 								{currentSelectedLoadName = Object.keys(value)[0]}
 								return (
 									<View key={generateRandString()}>
 										{Object.values(value).map((val , k) => {
 
 											{currentSelectedId = val.id}
-											{valuetem = (val.order_qty).toString()}
 
 											{(selectedBuyerId != '') ? setUpdatedDataArray.push({"dnum":currentSelectedLoadName,"route":selectedRoute,"vehicle":selectedVehicle,"driver":selectedDriver,"buyer":selectedBuyerId,"sitem":currentSelectedId,"qty":val.order_qty,"credit":"NO","sale_price":val.sale_price}) : ''}
 											return(
@@ -240,6 +276,7 @@ export default function AddQuantity({navigation}) {
 															<Text key={generateRandString()} style={{ fontSize: 15, fontWeight: 'bold', }} allowFontScaling={false}>
 																{((val.name.length > 20) ? (val.name).substring(0 , 20)+'..'  : val.name )}
 															</Text>
+				
 															<Text style={{fontSize: 10}} allowFontScaling={false}> Available Stock </Text>
 														</View>
 													</View>
@@ -252,10 +289,23 @@ export default function AddQuantity({navigation}) {
 													</View> */}
 				
 													<View key={generateRandString()} style={styles.inputBox}>
-														<TextInput keyboardType="numeric" placeholder="Qty" value={valuetem} style={styles.textInput} placeholder="QTY" onChange={(value) => { updateQty(currentSelectedLoadName ,val.id , value.nativeEvent.text) } }/>
+														<TextInput id="here" keyboardType="numeric" placeholder="Qty" value={valueData[currentSelectedLoadName+'_'+val.id]} style={styles.textInput} placeholder="QTY" onChange={(value) => {
+															let myNewData = {};
+															for(var i = 0 ; i < Object.keys(valueData).length;i++){
+																if( Object.keys(valueData)[i] == currentSelectedLoadName+'_'+val.id ){
+																	myNewData[currentSelectedLoadName+'_'+val.id ] = value.nativeEvent.text;
+																}else{
+																	myNewData[Object.keys(valueData)[i] ] = Object.values(valueData)[i];
+																}
+																setValueData(myNewData)
+																console.log(myNewData)
+															}
 
-														<TextInput keyboardType="numeric" placeholder="Price" value={val.sale_price} style={styles.textInput} placeholder="PRICE" onChange={(value) => { updatePrice(currentSelectedLoadName ,val.id , value.nativeEvent.text) } } />
-														<Text style={{ paddingHorizontal: 10,paddingVertical: 16,backgroundColor: '#ededed',borderWidth: 1 , borderColor: Colors.primary }}>{ (valuetem * val.sale_price).toFixed(2) }</Text>
+														 } }/>
+
+														<TextInput placeholder="Price" value={val.sale_price} style={styles.textInput} placeholder="PRICE" />
+														{/* <Text style={{ paddingHorizontal: 10,paddingVertical: 16,backgroundColor: '#ededed',borderWidth: 1 , borderColor: Colors.primary }}>{ (valuetem * val.sale_price) }</Text> */}
+
 													</View>
 												</View>
 											)
