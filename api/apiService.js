@@ -176,6 +176,20 @@ export const getListInvoices = ( vehicheNumber , driverId ) => {
 	});
 };
 
+// Check if buyer has VAT
+export const checkIfBuyerHasVAT = ( buyerId ) => {
+	return new Promise( (resolve , reject) => {
+		apiClient.get( 'check-buyer-has-vat/'+buyerId ).then((response) => {
+			console.log(response)
+			if(response.data.status == true){
+				resolve(response);
+			}else{
+				reject(response.data.error);
+			}
+		});
+	});
+};
+
 //add tp cart
 export const getCartItemDetails = ( postedData ) => {
 	return new Promise( (resolve , reject) => {
@@ -194,6 +208,32 @@ export const SaveOrder = ( postedData ) => {
 	return new Promise( (resolve , reject) => {
 		apiClient.post('save-order' , { data : postedData}).then((response) => {
 			console.log(response)
+			if(response.data.status == true){
+				resolve(response);
+			}else{
+				reject(response.data.error);
+			}
+		});
+		
+	});
+};
+//Save Order
+export const getSaleItemByInvoice = ( invoiceNo ) => {
+	return new Promise( (resolve , reject) => {
+		apiClient.post('get-sale-item-by-invoice' , { invoiceNumber : invoiceNo}).then((response) => {
+			if(response.data.status == true){
+				resolve(response);
+			}else{
+				reject(response.data.error);
+			}
+		});
+		
+	});
+};
+//Save Order
+export const searchBuyerByInvoiceNumber = ( invoiceNo ) => {
+	return new Promise( (resolve , reject) => {
+		apiClient.post('find-sale-item-like-invoice' , { invoiceNumber : invoiceNo}).then((response) => {
 			if(response.data.status == true){
 				resolve(response);
 			}else{

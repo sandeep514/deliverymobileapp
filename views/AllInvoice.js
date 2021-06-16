@@ -17,7 +17,7 @@ import MainScreen from '../layout/MainScreen';
 import {useState, useEffect} from 'react';
 import {generateRandString, getCartItemDetails, getListInvoices, getVehicle, imagePrefix} from '../api/apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {SaveOrder} from '../api/apiService';
+import {searchBuyerByInvoiceNumber, getSaleItemByInvoice} from '../api/apiService';
 import { ActivityIndicator } from 'react-native';
 import { useRef } from 'react';
 import { BluetoothManager,BluetoothEscposPrinter,BluetoothTscPrinter } from 'react-native-bluetooth-escpos-printer';
@@ -33,15 +33,16 @@ let selectedRoute = '';
 let selectedDriver = '';
 let selectedBuyerId = '';
 let valuetem = '';
-
 let updatedValue= '';
 let initalPaymentStatus = 'cash';
+
 export default function AddQuantity({navigation}) {
   	const [data, setData] = useState();
   	// const [totalAmount, setTotalAmount] = useState();
 	const [loadedData , setLoadedData] = useState();
 	const [updatedData , setUpdatedData] = useState();
 	const [loadedActivityIndicator , setLoadedActivityIndicator] = useState(false);
+	const [printingIndicator , setPrintingIndicator] = useState(false);
 	const [ActInd , setActInd] = useState(false);
 	const [creaditStatus , setCreditStatus] = useState(initalPaymentStatus);
 	const [saveOrderActivIndictor , setSaveOrderActivIndictor] = useState(false);
@@ -58,13 +59,11 @@ export default function AddQuantity({navigation}) {
             BluetoothManager.enableBluetooth().then( (r) => {
                 
                 setisBluetoothEnabled(true)
-                console.log("kjhnjkmnk")
                 if (r && r.length > 0) {
                     for (var i = 0; i < r.length; i++) {
                         
                         // if(JSON.parse(r[i]).name == "BlueTooth Printer"){
                             try {
-                                console.log(JSON.parse(r[i]).name)
                                 paired.push(JSON.parse(r[i]).name);
                                 setDevice(JSON.parse(r[i]).address)
                             } catch (e) {
@@ -113,21 +112,44 @@ export default function AddQuantity({navigation}) {
 			});
 		});
     }
-    printReceipt = (data) => {
-        console.log(data)
-        if( device != undefined ){
-            BluetoothManager.connect(device).then( (res) => {
-                console.log('here')
-                // printDesign()
-            },(e) => {
-            });
-        }else{
-            alert('printer not connected');
-        }
-    };
-    printDesign = async () => {
 
-            await BluetoothEscposPrinter.printerAlign(
+    function getSaleItemByInv (invoiceNo) {
+        return new Promise( (resolve , reject) => {
+            getSaleItemByInvoice(invoiceNo).then((res) => {
+                resolve(res.data.data);
+            });
+        } ,(err) =>{
+            reject(err)
+        })
+    }
+
+    printReceipt = (data) => {
+        setPrintingIndicator(true);
+        let buyerName = data[0]['buyer_rel'].name;
+        let buyerAddress = data[0]['buyer_rel'].address;
+        let buyerPhone = data[0]['buyer_rel'].contact_no;
+        let invoiceNo = data[0].invoice_no;
+        
+        getSaleItemByInv(invoiceNo).then((res) => {
+            if( device != undefined ){
+                BluetoothManager.connect(device).then( (ress) => {
+                    printDesign( Object.values(res) , invoiceNo , buyerName ,buyerAddress , buyerPhone );
+                },(e) => {
+                    alert(e);
+                    setPrintingIndicator(false);
+                });
+            }else{
+                alert('printer not connected');
+                setPrintingIndicator(false);
+            }
+        },(error) => {
+            alert(error);
+        });
+    };
+    printDesign = async (data , invoiceNo , buyerName, buyerAddress , buyerPhone) => {
+        let totalAmount = 0;
+
+        await BluetoothEscposPrinter.printerAlign(
                 BluetoothEscposPrinter.ALIGN.CENTER,
             );
             await BluetoothEscposPrinter.setBlob(0);
@@ -171,7 +193,7 @@ export default function AddQuantity({navigation}) {
             );
             // await BluetoothEscposPrinter.printText('Price：30\n\r', {});
             await BluetoothEscposPrinter.printText(
-                'INVOICE: '+savedOrderResonce[0]['invoice'],
+                'INVOICE: '+invoiceNo,
                 {},
             );
             await BluetoothEscposPrinter.printText(
@@ -191,7 +213,7 @@ export default function AddQuantity({navigation}) {
                     BluetoothEscposPrinter.ALIGN.CENTER,
                     BluetoothEscposPrinter.ALIGN.RIGHT,
                 ],
-                ['Customer','', '','Date:'+savedOrderResonce[0]['ddate']],
+                ['Customer','', '','Date:'],
             {},
         );
         await BluetoothEscposPrinter.printText(
@@ -208,7 +230,7 @@ export default function AddQuantity({navigation}) {
                     BluetoothEscposPrinter.ALIGN.CENTER,
                     BluetoothEscposPrinter.ALIGN.RIGHT,
                 ],
-                ['Name:','', '',savedBuyerData['name']],
+                ['Name:','', '',buyerName],
             {},
         );
         let columnWidthsHeaderAddress = [9,1,1,20];
@@ -220,7 +242,7 @@ export default function AddQuantity({navigation}) {
                     BluetoothEscposPrinter.ALIGN.CENTER,
                     BluetoothEscposPrinter.ALIGN.RIGHT,
                 ],
-                ['Address:','', '',savedBuyerData['address']],
+                ['Address:','', '',buyerAddress],
             {},
         );
         let columnWidthsHeaderMobile = [9,1,1,20];
@@ -232,7 +254,7 @@ export default function AddQuantity({navigation}) {
                     BluetoothEscposPrinter.ALIGN.CENTER,
                     BluetoothEscposPrinter.ALIGN.RIGHT,
                 ],
-                ['Phone:','', '',savedBuyerData['contact_no']],
+                ['Phone:','', '',buyerPhone],
             {},
         );
         await BluetoothEscposPrinter.printText(
@@ -273,14 +295,14 @@ export default function AddQuantity({navigation}) {
             {},
         );
         let columnWidths = [12, 4, 8, 8];
-            for(let i = 0 ; i < savedOrderResonce.length ; i++){
-                if( savedOrderResonce[i]['sale_item_rel'].itemcategory == 'EGGS' ){
-                    let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
-                    let salePrice = savedOrderResonce[i]['sale_price'];
-                    let qty = savedOrderResonce[i]['qty'];
-                    let amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
+            for(let i = 0 ; i < data.length ; i++){
+                if( data[i]['sale_item_rel'].itemcategory == 'EGGS' ){
+                    let sitem       = data[i]['sale_item_rel']['name'];
+                    let salePrice   = data[i]['sale_price'];
+                    let qty         = data[i]['qty'];
+                    let amount = ((data[i]['sale_price'] * data[i]['qty']).toFixed(2)).toString();
     
-                    totalAmount = (parseFloat(totalAmount));
+                    totalAmount = (parseFloat(totalAmount)+parseFloat(amount));
     
                     await BluetoothEscposPrinter.printColumn(
                         columnWidths,
@@ -344,14 +366,14 @@ export default function AddQuantity({navigation}) {
             {},
         );
         let columnWidthsVat = [12, 4, 8, 8];
-            for(let i = 0 ; i < savedOrderResonce.length ; i++){
-                if( savedOrderResonce[i]['sale_item_rel'].itemcategory != 'EGGS' ){
-                    let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
-                    let salePrice = savedOrderResonce[i]['sale_price'];
-                    let qty = savedOrderResonce[i]['qty'];
-                    let amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
+            for(let i = 0 ; i < data.length ; i++){
+                if( data[i]['sale_item_rel'].itemcategory != 'EGGS' ){
+                    let sitem       = data[i]['sale_item_rel']['name'];
+                    let salePrice   = data[i]['sale_price'];
+                    let qty         = data[i]['qty'];
+                    let amount      = ((data[i]['sale_price'] * data[i]['qty']).toFixed(2)).toString();
     
-                    totalAmount = (parseFloat(totalAmount));
+                    totalAmount = (parseFloat(totalAmount)+parseFloat(amount));
     
                     await BluetoothEscposPrinter.printColumn(
                         columnWidthsVat,
@@ -380,53 +402,25 @@ export default function AddQuantity({navigation}) {
                 BluetoothEscposPrinter.ALIGN.CENTER,
                 BluetoothEscposPrinter.ALIGN.RIGHT,
             ],
-            ['', '', 'Total: ','$'+(totalAmount).toFixed(2)],
+            ['', '', 'Total: ','$'+(totalAmount)],
             {
             },
         );
-        await BluetoothEscposPrinter.printText('\n\r', {});
-
-
-        //images
-        await BluetoothEscposPrinter.printerAlign(
-            BluetoothEscposPrinter.ALIGN.LEFT,
-        );
-        await BluetoothEscposPrinter.printText('Signature: \n\r', {
-                encoding: 'GBK',
-                codepage: 0,
-                widthtimes: 0,
-                heigthtimes: 0,
-                fonttype: 1,
-            });
-        await BluetoothEscposPrinter.printPic(base64, {width: 100,left: 100,height: 50});
-
-
-        await BluetoothEscposPrinter.printText('\n\r', {});
-         await BluetoothEscposPrinter.printerAlign(
-            BluetoothEscposPrinter.ALIGN.LEFT,
-        );
-        await BluetoothEscposPrinter.printText('Remarks: \n\r', {
-            encoding: 'GBK',
-            codepage: 0,
-            widthtimes: 0,
-            heigthtimes: 0,
-            fonttype: 1,
-        });
-        await BluetoothEscposPrinter.printerAlign(
-           BluetoothEscposPrinter.ALIGN.CENTER,
-       );
-        await BluetoothEscposPrinter.printText(remarks+'\n\r', {
-            encoding: 'GBK',
-            codepage: 0,
-            widthtimes: 1,
-            heigthtimes: 1,
-            fonttype: 1,
-        });
 
         await BluetoothEscposPrinter.printText('\n\r', {});
         await BluetoothEscposPrinter.printText('\n\r', {});
         await BluetoothEscposPrinter.printText('\n\r', {});
         await BluetoothEscposPrinter.printText('\n\r', {});
+
+        setPrintingIndicator(false);
+    }
+
+    function searchBuyer(text){
+        // setActInd(true)
+        searchBuyerByInvoiceNumber(text).then((res) => {
+            setSelectedLoadCount(res.data.data)
+            // setActInd(false)
+        })
     }
 
     function printData(data){
@@ -441,24 +435,38 @@ export default function AddQuantity({navigation}) {
 					</View>
 				:
 					<View style={styles.itemListSection}>
+                        {(printingIndicator)?
+                            <View style={{ position: 'absolute',height: win.height,width: win.width,backgroundColor: '#e8e8e8',zIndex: 9999,opacity: 0.5,justifyContent: 'center',alignItems: 'center'}}>
+                                <ActivityIndicator size="large" color={Colors.primary} />
+                                <Text>Printing your invoice ,Please wait...</Text>
+                            </View>
+                        :
+                            <View></View>
+                        }
+                        <TextInput placeholder="Search Buyer By Invoice no" placeholderTextColor="lightgrey" style={styles.textInput} onChange={(value) => { searchBuyer(value.nativeEvent.text) } } />
                         <ScrollView vertical='true'>
-                            {(selectedLoadCount != undefined) ?
+                            {(selectedLoadCount != undefined && selectedLoadCount != null) ?
                                 Object.values(selectedLoadCount).map((l, i) => (
-                                    <TouchableHighlight key={generateRandString()}>
-                                        <ListItem bottomDivider key={generateRandString()}>
-                                            <ListItem.Content key={generateRandString()}>
-                                                <ListItem.Title key={generateRandString()} style={{fontSize: 14}} allowFontScaling={false}>
-                                                    {l[0].buyer}
-                                                </ListItem.Title>
-                                                <ListItem.Subtitle allowFontScaling={false} >
-                                                    <Text style={{fontSize: 10}}>{l[0].invoice_no}</Text>
-                                                </ListItem.Subtitle>
-                                            </ListItem.Content>
-                                            <View>
-                                                <Pressable style={{backgroundColor: Colors.primary,paddingHorizontal: 20,paddingVertical: 10}} onPress={() => { printReceipt(l[0]) }} ><Text style={{color: 'white'}}>Print</Text></Pressable>
-                                            </View>
-                                        </ListItem>
-                                    </TouchableHighlight>
+                                    (l != null)?
+                                    <TouchableHighlight key={i}>
+                                            <ListItem bottomDivider key={i}>
+                                                <ListItem.Content key={i}>
+                                                    <ListItem.Title key={i} style={{fontSize: 14}} allowFontScaling={false}>
+                                                        {l[0]["buyer_rel"].name}
+                                                    </ListItem.Title>
+                                                    <ListItem.Subtitle allowFontScaling={false} >
+                                                        <Text style={{fontSize: 10}}>{l[0].invoice_no}</Text>
+                                                    </ListItem.Subtitle>
+                                                </ListItem.Content>
+                                                <View>
+                                                    <Pressable style={{backgroundColor: Colors.primary,paddingHorizontal: 20,paddingVertical: 10}} onPress={() => { printReceipt(l) }} >
+                                                        <Text style={{color: 'white'}}>Print</Text>
+                                                    </Pressable>
+                                                </View>
+                                            </ListItem>
+                                        </TouchableHighlight>
+                                    :
+                                        <View></View>
                                 ))
                             : 
                                 <View>
@@ -519,12 +527,6 @@ const styles = StyleSheet.create({
     borderColor: 'dodgerblue',
     height: 90,
   },
-  textInput: {
-    borderColor: Colors.purple,
-    borderWidth: 1,
-    width: 50,
-	color: '#000'
-  },
 	activeStatus: {
 		backgroundColor: Colors.primary,
 		paddingHorizontal: 18,
@@ -547,4 +549,12 @@ const styles = StyleSheet.create({
 	deActiveStatusText: {
 		color: Colors.primary
 	},
+    textInput:{
+        borderColor: 'lightgrey',
+        borderWidth: 1,
+        marginHorizontal: 17,
+        paddingHorizontal: 17,
+        borderRadius: 100,
+        color: '#000'
+    }
 });

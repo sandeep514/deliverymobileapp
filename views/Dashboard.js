@@ -127,7 +127,7 @@ export default function Dashboard({navigation , route}) {
 								<ListItem bottomDivider key={generateRandString()}>
 									<ListItem.Content key={generateRandString()}>
 										<ListItem.Title key={generateRandString()} style={{fontSize: 14}} allowFontScaling={false}>
-											{l[0].buyer}
+											{l[0].buyer_rel.name}
 										</ListItem.Title>
 										<ListItem.Subtitle allowFontScaling={false} >
 											<Text style={{fontSize: 10}}>{l[0].sitem}</Text>
@@ -136,8 +136,8 @@ export default function Dashboard({navigation , route}) {
 											<Text style={{fontSize: 11}}>{l[0].sale_price} x {l[0].qty}</Text>	
 										</ListItem.Subtitle>
 									</ListItem.Content>
-									<View>
-										<Text >£ {(l[0].sale_price * l[0].qty).toFixed(2)}</Text>
+									<View key={generateRandString()}>
+										<Text key={generateRandString()}>£ {(l[0].sale_price * l[0].qty).toFixed(2)}</Text>
 									</View>
 								</ListItem>
 							</TouchableHighlight>

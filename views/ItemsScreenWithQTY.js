@@ -2,7 +2,7 @@ import React , { useEffect , useState} from 'react';
 import { ActivityIndicator } from 'react-native';
 import {View, Text, StyleSheet ,TextInput } from 'react-native';
 import {ScrollView} from 'react-native-gesture-handler';
-import { getItemsByVehicleAndLoads, imagePrefix } from '../api/apiService';
+import { getItemsByVehicleAndLoads, imagePrefix, checkIfBuyerHasVAT } from '../api/apiService';
 import {Colors} from '../components/Colors';
 import ItemCard from '../components/ItemCard';
 import MainScreen from '../layout/MainScreen';
@@ -21,8 +21,16 @@ export default function ItemsScreenWithQty({navigation}) {
 
 	useEffect(() => {
 		AsyncStorage.setItem('selectedLoadedItemsByQty',JSON.stringify({}));
+		AsyncStorage.getItem('selectedBuyerRouteId').then((buyerId) => {
+			checkIfBuyerHasVAT(buyerId).then((res) => {
+				console.log(res.data.message)
+				// AsyncStorage.setItem('currentVATstatus' , status);
+				AsyncStorage.setItem('VATStatus' , (res.data.message).toString());
+			});
+		})
 		getItems();
 	} , []);
+	
 	function getItems () {
 		AsyncStorage.getItem('selectedVehicleNo').then((value) => { 
 			let vehicheId = value;

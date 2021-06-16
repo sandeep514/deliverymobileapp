@@ -23,34 +23,51 @@ export default function PDFmanager({navigation , text, onOK}) {
 	const [ isBluetoothEnabled ,setisBluetoothEnabled ] = useState(false);
 	const [ device ,setDevice ] = useState();
 	const [ savedOrderResonce ,setSavedOrderResponce ] = useState();
+	const [ hasNonVatProducts ,setHasNonVatProducts ] = useState(false);
+	const [ hasVatProducts ,setHasVatProducts ] = useState(false);
 	const [ remarks ,setRemarks ] = useState('');
 	const [ base64 ,setBase64 ] = useState('');
     const [creaditStatus , setCreditStatus] = useState('cash');
 	const [saveOrderActivIndictor , setSaveOrderActivIndictor] = useState(false);
 	const [savedBuyerData , setSavedBuyerData] = useState();
+	const [showVAT , setShowVAT] = useState(false);
 
 	let setBase64Image = '';
 
     useEffect(() => {
+        AsyncStorage.getItem('currentVATstatus').then((res) => {
+            console.log(res);
+            if( res == '1' ){
+                setShowVAT(true);
+            }else{
+                setShowVAT(false);
+            }
+        })
         AsyncStorage.getItem('orderSaveReponce').then((result) => {
             
-            setSavedOrderResponce(JSON.parse(result));
-            // console.log(JSON.parse(result))
+            setSavedOrderResponce(JSON.parse(result));     
             for(let i = 0 ; i < JSON.parse(result).length ; i++){
+                if( JSON.parse(result)[i]['sale_item_rel']['itemcategory'] == 'EGGS' || JSON.parse(result)[i]['sale_item_rel']['itemcategory'] == 'eggs' ){
+                    setHasNonVatProducts(true);
+                }else{
+                    setHasVatProducts(true);
+                }
+
                 let amount = ((JSON.parse(result)[i]['sale_price'] * JSON.parse(result)[i]['qty']).toFixed(2)).toString();
                 totalAmount = (parseFloat(totalAmount)+parseFloat(amount));
             }
         })
+
         AsyncStorage.getItem('orderSaveBuyer').then((res) => {
             setSavedBuyerData(JSON.parse(res));
         })
+
         BluetoothManager.isBluetoothEnabled().then( (enabled) => {
             BluetoothManager.enableBluetooth().then( (r) => {
                 
                 setisBluetoothEnabled(true)
                 if (r && r.length > 0) {
                     for (var i = 0; i < r.length; i++) {
-
                         if(JSON.parse(r[i]).name == "BlueTooth Printer"){
                             try {
                                 paired.push(JSON.parse(r[i]).name);
@@ -230,40 +247,42 @@ export default function PDFmanager({navigation , text, onOK}) {
             '--------------------------------\n\r',
             {},
         );
-        await BluetoothEscposPrinter.printText('\n\r', {});
-        await BluetoothEscposPrinter.printerAlign(
-            BluetoothEscposPrinter.ALIGN.CENTER,
-        );
-        await BluetoothEscposPrinter.printText(
-            'Items without VAT',
-            {encoding: 'GBK',
-                codepage: 0,
-                widthtimes: 0,
-                heigthtimes: 0,
-                fonttype: 1
-            }
-        );
-        await BluetoothEscposPrinter.printText('\n\r', {});
-        await BluetoothEscposPrinter.printText('\n\r', {});
+        if( hasNonVatProducts ){
+            await BluetoothEscposPrinter.printText('\n\r', {});
+            await BluetoothEscposPrinter.printerAlign(
+                BluetoothEscposPrinter.ALIGN.CENTER,
+            );
+            await BluetoothEscposPrinter.printText(
+                'Items without VAT',
+                {encoding: 'GBK',
+                    codepage: 0,
+                    widthtimes: 0,
+                    heigthtimes: 0,
+                    fonttype: 1
+                }
+            );
+            await BluetoothEscposPrinter.printText('\n\r', {});
+            await BluetoothEscposPrinter.printText('\n\r', {});
 
-        let columnWidthsHeaderPhone = [12,4,8,8];
-        await BluetoothEscposPrinter.printColumn(
-            columnWidthsHeaderPhone,
-                [
-                    BluetoothEscposPrinter.ALIGN.LEFT,
-                    BluetoothEscposPrinter.ALIGN.CENTER,
-                    BluetoothEscposPrinter.ALIGN.CENTER,
-                    BluetoothEscposPrinter.ALIGN.RIGHT,
-                ],
-                ['Items','Qty', 'Price','Amount'],
-            {},
-        );
+            let columnWidthsHeaderPhone = [6,6,9,9];
+            await BluetoothEscposPrinter.printColumn(
+                columnWidthsHeaderPhone,
+                    [
+                        BluetoothEscposPrinter.ALIGN.LEFT,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.RIGHT,
+                    ],
+                    ['Qty', 'Price','VAT','Amount'],
+                {},
+            );
 
-        await BluetoothEscposPrinter.printText(
-            '--------------------------------\n\r',
-            {},
-        );
-        let columnWidths = [12, 4, 8, 8];
+            await BluetoothEscposPrinter.printText(
+                '--------------------------------\n\r',
+                {},
+            );
+            
+            let columnWidths = [6,6,9,9];
             for(let i = 0 ; i < savedOrderResonce.length ; i++){
                 if( savedOrderResonce[i]['sale_item_rel'].itemcategory == 'EGGS' ){
                     let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
@@ -272,24 +291,38 @@ export default function PDFmanager({navigation , text, onOK}) {
                     let amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
     
                     totalAmount = (parseFloat(totalAmount));
-    
+                    await BluetoothEscposPrinter.printerAlign(
+                        BluetoothEscposPrinter.ALIGN.LEFT,
+                    );
+                    await BluetoothEscposPrinter.printText(
+                        'Item: '+sitem,
+                        {},
+                    );
+                    await BluetoothEscposPrinter.printText(
+                        '\n\r',
+                        {},
+                    );
                     await BluetoothEscposPrinter.printColumn(
                         columnWidths,
                         [
                             BluetoothEscposPrinter.ALIGN.LEFT,
                             BluetoothEscposPrinter.ALIGN.LEFT,
                             BluetoothEscposPrinter.ALIGN.CENTER,
-                            BluetoothEscposPrinter.ALIGN.RIGHT,
+                            BluetoothEscposPrinter.ALIGN.CENTER,
                         ],
-                        [sitem, qty, '$'+salePrice, '$'+amount],
+                        [qty, '$'+salePrice,'$'+(((amount-((amount*100)/120)).toFixed(2))), '$'+amount],
                     {});
                     await BluetoothEscposPrinter.printText('\n\r', {});
                 }
             }
+            
+        }
         
-        await BluetoothEscposPrinter.printText('\n\r', {});
-        await BluetoothEscposPrinter.printerAlign(
-            BluetoothEscposPrinter.ALIGN.CENTER,
+        if(hasVatProducts){
+
+            await BluetoothEscposPrinter.printText('\n\r', {});
+            await BluetoothEscposPrinter.printerAlign(
+                BluetoothEscposPrinter.ALIGN.CENTER,
             );
             await BluetoothEscposPrinter.printText(
                 '*************************',
@@ -299,42 +332,42 @@ export default function PDFmanager({navigation , text, onOK}) {
                 heigthtimes: 0,
                 fonttype: 1
             });
-            
-        await BluetoothEscposPrinter.printText('\n\r', {});
-        await BluetoothEscposPrinter.printText('\n\r', {});
-        await BluetoothEscposPrinter.printerAlign(
-            BluetoothEscposPrinter.ALIGN.CENTER,
-        );
-        await BluetoothEscposPrinter.printText(
-            'Items with VAT',
-            {encoding: 'GBK',
-                codepage: 0,
-                widthtimes: 0,
-                heigthtimes: 0,
-                fonttype: 1
-            }
-        );
-        await BluetoothEscposPrinter.printText('\n\r', {});
-        await BluetoothEscposPrinter.printText('\n\r', {});
 
-        let columnWidthsHeaderPhoneVat = [12,4,8,8];
-        await BluetoothEscposPrinter.printColumn(
-            columnWidthsHeaderPhoneVat,
-                [
-                    BluetoothEscposPrinter.ALIGN.LEFT,
-                    BluetoothEscposPrinter.ALIGN.CENTER,
-                    BluetoothEscposPrinter.ALIGN.CENTER,
-                    BluetoothEscposPrinter.ALIGN.RIGHT,
-                ],
-                ['Items','Qty', 'Price','Amount'],
-            {},
-        );
+            await BluetoothEscposPrinter.printText('\n\r', {});
+            await BluetoothEscposPrinter.printText('\n\r', {});
+            await BluetoothEscposPrinter.printerAlign(
+                BluetoothEscposPrinter.ALIGN.CENTER,
+            );
+            await BluetoothEscposPrinter.printText(
+                'Items with VAT',
+                {encoding: 'GBK',
+                    codepage: 0,
+                    widthtimes: 0,
+                    heigthtimes: 0,
+                    fonttype: 1
+                }
+            );
+            await BluetoothEscposPrinter.printText('\n\r', {});
+            await BluetoothEscposPrinter.printText('\n\r', {});
 
-        await BluetoothEscposPrinter.printText(
-            '--------------------------------\n\r',
-            {},
-        );
-        let columnWidthsVat = [12, 4, 8, 8];
+            let columnWidthsHeaderPhoneVat = [6,6,9,9];
+            await BluetoothEscposPrinter.printColumn(
+                columnWidthsHeaderPhoneVat,
+                    [
+                        BluetoothEscposPrinter.ALIGN.LEFT,
+                        BluetoothEscposPrinter.ALIGN.LEFT,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                    ],
+                    ['Qty', 'Price', 'VAT','Amount'],
+                {},
+            );
+    
+            await BluetoothEscposPrinter.printText(
+                '--------------------------------\n\r',
+                {},
+            );
+    
             for(let i = 0 ; i < savedOrderResonce.length ; i++){
                 if( savedOrderResonce[i]['sale_item_rel'].itemcategory != 'EGGS' ){
                     let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
@@ -343,26 +376,39 @@ export default function PDFmanager({navigation , text, onOK}) {
                     let amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
     
                     totalAmount = (parseFloat(totalAmount));
-    
+                    await BluetoothEscposPrinter.printerAlign(
+                        BluetoothEscposPrinter.ALIGN.LEFT,
+                    );
+                    await BluetoothEscposPrinter.printText(
+                        'Item: '+sitem,
+                        {},
+                    );
+                    await BluetoothEscposPrinter.printText(
+                        '\n\r',
+                        {},
+                    );
+
+                    let columnWidthsVat = [6,6,9,9];
                     await BluetoothEscposPrinter.printColumn(
                         columnWidthsVat,
                         [
                             BluetoothEscposPrinter.ALIGN.LEFT,
                             BluetoothEscposPrinter.ALIGN.LEFT,
                             BluetoothEscposPrinter.ALIGN.CENTER,
-                            BluetoothEscposPrinter.ALIGN.RIGHT,
+                            BluetoothEscposPrinter.ALIGN.CENTER,
                         ],
-                        [sitem, qty, '$'+salePrice, '$'+amount],
+                        [qty, '$'+salePrice,'$'+(((amount-((amount*100)/120)).toFixed(2))),'$'+amount],
                     {});
                     await BluetoothEscposPrinter.printText('\n\r', {});
                 }
             }
-        
+        }
 
         await BluetoothEscposPrinter.printText(
             '--------------------------------\n\r',
             {},
         );
+        let columnWidthsVat = [6,6,9,9];
         await BluetoothEscposPrinter.printColumn(
             columnWidthsVat,
             [
@@ -470,27 +516,38 @@ export default function PDFmanager({navigation , text, onOK}) {
                                     <Text style={{width: 100}}>Phone: </Text>
                                     <Text style={{}}>{(savedBuyerData != undefined) ? savedBuyerData['contact_no'] : ''} </Text>
                                 </View>
-                                <View style={{marginTop: 20,paddingTop: 10,borderTopColor: 'black', borderTopWidth: 1}}><Text style={{justifyContent: 'center',textAlign: 'center',fontWeight:'bold'}}>Items without VAT</Text></View>
-                                <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,borderBottomColor:'black',borderTopColor:'transparent',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1 ,padding: 10}}>
-                                    <Text style={{fontWeight: 'bold',width: 100}}>Item</Text>
-                                    <Text style={{fontWeight: 'bold'}}>Qty</Text>
-                                    <Text style={{fontWeight: 'bold'}}>Price</Text>
-                                    <Text style={{fontWeight: 'bold'}}>Amount</Text>
-                                </View>
-                                <View style={{marginTop: 10}}>
-                                </View>
+                                {( hasNonVatProducts ) ?
+                                    <View>
+                                        <View style={{marginTop: 20,paddingTop: 10,borderTopColor: 'black', borderTopWidth: 1}}><Text style={{justifyContent: 'center',textAlign: 'center',fontWeight:'bold'}}>Items without VAT</Text></View>
+                                        <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,borderBottomColor:'black',borderTopColor:'transparent',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1 ,padding: 10}}>
+                                            <Text style={{fontWeight: 'bold'}}>Qty</Text>
+                                            <Text style={{fontWeight: 'bold'}}>Price</Text>
+                                            <Text style={{fontWeight: 'bold'}}>VAT</Text>
+                                            <Text style={{fontWeight: 'bold'}}>Amt(inc)</Text>
+                                        </View>
+                                        <View style={{marginTop: 10}}>
+                                        </View>
+                                    </View>                                
+                                :
+                                    <View></View>
+                                }
+                                
                                     {(savedOrderResonce != undefined) ?
                                         savedOrderResonce.map((value , key) => {
-
                                             return (
                                                 <View key={key}>
                                                     {( value['sale_item_rel'].itemcategory == 'EGGS' ) ?
+                                                    <View>
+                                                        <Text style={{ width: '100%',marginLeft: 20}}><Text style={{ fontWeight: 'bold' }}>Item: </Text>{value['sale_item_rel'].name}</Text>
                                                         <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
-                                                            <Text style={{ width: 90}}>{value['sale_item_rel'].name}</Text>
+                                                            {/* <Text style={{ width: 90}}>{value['sale_item_rel'].name}</Text> */}
                                                             <Text style={{ }}>{value['qty']}</Text>
                                                             <Text style={{ }}>£{value['sale_price']}</Text>
+                                                            <Text style={{ }}>£{((value['sale_price']*100) / 120).toFixed(2)}</Text>
                                                             <Text style={{ }}>£{((value['sale_price'] * value['qty']).toFixed(2)).toString()}</Text>
                                                         </View>
+                                                    </View>
+
                                                     :
                                                         <View></View>
                                                     }
@@ -501,29 +558,45 @@ export default function PDFmanager({navigation , text, onOK}) {
                                     : 
                                         <View></View>
                                     }
-                                <Text style={{textAlign: 'center',marginTop: 30,marginBottom: 10}}>*******************************</Text>
-                                <View style={{marginTop: 20,paddingTop: 10,borderTopColor: 'black', borderTopWidth: 1}}><Text style={{justifyContent: 'center',textAlign: 'center',fontWeight:'bold'}}>Items with VAT</Text></View>
-                                <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,borderBottomColor:'black',borderTopColor:'transparent',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1 ,padding: 10}}>
-                                    <Text style={{fontWeight: 'bold',width: 100}}>Item</Text>
-                                    <Text style={{fontWeight: 'bold'}}>Qty</Text>
-                                    <Text style={{fontWeight: 'bold'}}>Price</Text>
-                                    <Text style={{fontWeight: 'bold'}}>Amount</Text>
-                                </View>
-                                <View style={{marginTop: 10}}>
-                                </View>
+
+                                    {( hasVatProducts ) ?
+                                        <View>
+                                            <Text style={{textAlign: 'center',marginTop: 30,marginBottom: 10}}>*******************************</Text>
+                                            <View style={{marginTop: 20,paddingTop: 10,borderTopColor: 'black', borderTopWidth: 1}}><Text style={{justifyContent: 'center',textAlign: 'center',fontWeight:'bold'}}>Items with VAT</Text></View>
+                                            <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,borderBottomColor:'black',borderTopColor:'transparent',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1 ,padding: 10}}>
+                                                <Text style={{fontWeight: 'bold'}}>Qty</Text>
+                                                <Text style={{fontWeight: 'bold'}}>Price</Text>
+                                                <Text style={{fontWeight: 'bold'}}>VAT</Text>
+                                                <Text style={{fontWeight: 'bold'}}>Amt(inc)</Text>
+                                            </View>
+                                            <View style={{marginTop: 10}}>
+                                            </View>
+                                        </View>
+                                    :
+                                        <View></View>
+                                    }
+                                    
                                     {(savedOrderResonce != undefined) ?
                                         savedOrderResonce.map((value , key) => {
 
                                             return (
-                                                <View key={key}>
+                                                <View key={key} style={{ borderBottomColor: '#ededed', borderBottomWidth: 1,paddingVertical: 15 }}>
                                                     {( value['sale_item_rel'].itemcategory != 'EGGS' ) ?
                                                         <View key={key}>
+                                                            <Text style={{ width: '100%',marginLeft: 20}}><Text style={{ fontWeight: 'bold' }}>Item: </Text>{value['sale_item_rel'].name}</Text>
                                                             <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
-                                                                <Text style={{ width: 90}}>{value['sale_item_rel'].name}</Text>
                                                                 <Text style={{ }}>{value['qty']}</Text>
                                                                 <Text style={{ }}>£{value['sale_price']}</Text>
+                                                                <Text style={{ }}>£{((value['sale_price']*100) / 120).toFixed(2)}</Text>
                                                                 <Text style={{ }}>£{((value['sale_price'] * value['qty']).toFixed(2)).toString()}</Text>
                                                             </View>
+                                                            {/* <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
+                                                                <Text style={{ width: 90}}>{}</Text>
+                                                                <Text style={{ }}>{}</Text>
+                                                                <Text style={{ fontWeight: 'bold'}}>VAT</Text>
+                                                                <Text style={{ }}>£{((value['sale_price']*100) / 120).toFixed(2)}</Text>
+                                                            </View> */}
+
                                                         </View>
                                                     :
                                                         <View></View>

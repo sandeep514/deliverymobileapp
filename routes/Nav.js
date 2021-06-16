@@ -21,11 +21,11 @@ import { View, Text, Button, Image } from 'react-native';
 
 const Stack = createStackNavigator();
 
-export default function Nav({navigation}) {
+export default function Nav() {
 	return (
 		<NavigationContainer theme={DarkTheme}>
 			<Stack.Navigator
-				initialRouteName="AllInvoice"
+				initialRouteName="LoginScreen"
 				allowFontScaling={false}
 				screenOptions={{
 				headerStyle: {
@@ -75,16 +75,16 @@ export default function Nav({navigation}) {
 				<Stack.Screen
 					name="Dashboard"
 					component={Dashboard}
-					options={{title: 'Dashboard', 
+					options={({navigation}) => ({title: 'Dashboard', 
 						headerRight: () => (
 							<Button
-								onPress={() => alert('This is a button!')}
+								onPress={() => navigation.navigate('AllInvoice') }
 								title="All Invoices"
 								color={Colors.primary}
 								buttonStyle={{marginRight: 100}}
 							/>
 						),
-					}}
+					})}
 				/>
 
 				<Stack.Screen
