@@ -18,6 +18,8 @@ target 'app' do
 
   pod 'react-native-webview', :path => '../node_modules/react-native-webview'
 
+  pod 'RNCCheckbox', :path => '../node_modules/@react-native-community/checkbox'
+
   target 'appTests' do
     inherit! :complete
     # Pods for testing

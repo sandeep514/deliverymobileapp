@@ -15,12 +15,13 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import {ListItem, Avatar, Header, Button, Input} from 'react-native-elements';
 import MainScreen from '../layout/MainScreen';
 import {useState, useEffect} from 'react';
-import {generateRandString, getCartItemDetails, getListInvoices, getVehicle, imagePrefix} from '../api/apiService';
+import {generateRandString, getCartItemDetails, getListInvoices, getPendingSales, getVehicle, imagePrefix, updatePaymentStatus} from '../api/apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {searchBuyerByInvoiceNumber, getSaleItemByInvoice} from '../api/apiService';
 import { ActivityIndicator } from 'react-native';
 import { useRef } from 'react';
 import { BluetoothManager,BluetoothEscposPrinter,BluetoothTscPrinter } from 'react-native-bluetooth-escpos-printer';
+import { Modal } from 'react-native';
 
 const win = Dimensions.get('window');
 
@@ -36,11 +37,12 @@ let valuetem = '';
 let updatedValue= '';
 let initalPaymentStatus = 'cash';
 
-export default function AddQuantity({navigation}) {
+export default function Todayinvoices({navigation}) {
   	const [data, setData] = useState();
   	// const [totalAmount, setTotalAmount] = useState();
 	const [loadedData , setLoadedData] = useState();
 	const [updatedData , setUpdatedData] = useState();
+	const [creditData , setCreditData] = useState();
 	const [loadedActivityIndicator , setLoadedActivityIndicator] = useState(false);
 	const [printingIndicator , setPrintingIndicator] = useState(false);
 	const [ActInd , setActInd] = useState(false);
@@ -49,68 +51,49 @@ export default function AddQuantity({navigation}) {
 	const [selectedLoadCount , setSelectedLoadCount] = useState();
 	const [ device ,setDevice ] = useState();
 	const [ isBluetoothEnabled ,setisBluetoothEnabled ] = useState(false);
+	const [ model ,showModel ] = useState(false);
+	const [ selectedPerson ,setSelectedPerson ] = useState();
+    const [modalVisible, setModalVisible] = useState(false);
+    const [invoice, setInvoice] = useState();
+    const [status, setStatus] = useState();
 
 	const ref_input2 = useRef();
     var paired = [];
 
 	useEffect(() => {
-        getListInvoice();
-            BluetoothManager.isBluetoothEnabled().then( (enabled) => {
-            BluetoothManager.enableBluetooth().then( (r) => {
-                
-                setisBluetoothEnabled(true)
-                if (r && r.length > 0) {
-                    for (var i = 0; i < r.length; i++) {
-                        
-                        // if(JSON.parse(r[i]).name == "BlueTooth Printer"){
-                            try {
-                                paired.push(JSON.parse(r[i]).name);
-                                setDevice(JSON.parse(r[i]).address)
-                            } catch (e) {
-                                alert(e);
-                            }
-                        // }
-                    }
-                }else{
-
-                }
-                // var jsonPairedData = JSON.stringify(paired);
-                
-                
-                
-                // setDevice(paired[0].address)
-                // BluetoothManager.connect(paired[0].address).then(
-                //     printDesign(),
-                //     (err) => {
-                //         alert(err);
-                //     },
-                //     (e) => {
-                //         alert(e);
-                //     },
-                // );
-            },
-            (err) => {
-                alert(err);
-            },
-            );
-        },
-        (err) => {
-            alert(err);
-        },
-        );
-
+        getlist()
     } , [])
-
-    function getListInvoice(){
-        AsyncStorage.getItem('selectedVehicleNo').then((value) => {
-			let selectedVehNo  = value;
-			AsyncStorage.getItem('user_id').then((value) => {
-				let driverId =  value;
-                getListInvoices(driverId , selectedVehNo).then((data) => {
-                    setSelectedLoadCount(data.data.data)
+    function getlist(){
+        AsyncStorage.getItem('selectedVehicleNo').then((vehicheId) => {
+			AsyncStorage.getItem('user_id').then((driverId) => {
+                AsyncStorage.getItem('selectedRoute').then((route) => {
+                    
+                    getPendingSale({"route":route,"driver":driverId,"vehicle":vehicheId})
                 });
-			});
-		});
+            });
+        });
+    }
+
+    // function getListInvoice(){
+    //     AsyncStorage.getItem('selectedVehicleNo').then((value) => {
+	// 		let selectedVehNo  = value;
+	// 		AsyncStorage.getItem('user_id').then((value) => {
+	// 			let driverId =  value;
+    //             getListInvoices(driverId , selectedVehNo).then((data) => {
+    //                 setSelectedLoadCount(data.data.data)
+    //             });
+	// 		});
+	// 	});
+    // }
+
+    function getPendingSale (){
+        return new Promise((resolve , reject) => {
+            getPendingSales().then((res) => {
+                setCreditData(res.data.data)
+                showModel(false);
+            } , (err) => {
+            });
+        })
     }
 
     function getSaleItemByInv (invoiceNo) {
@@ -423,11 +406,63 @@ export default function AddQuantity({navigation}) {
         })
     }
 
+    function showDropdown(invoiceNo){
+        if( selectedPerson == invoiceNo ){
+            setSelectedPerson('');
+        }else{
+            setSelectedPerson(invoiceNo)
+        }
+        // showModel(true)
+    }
+
     function printData(data){
 
     }
+
+    function changeStatus(){
+        showModel(true);
+        setModalVisible(false)
+        updatePaymentStatus(invoice , status).then((res) => {
+            getlist();
+        } , (err) => {
+            showModel(false);
+        })
+    }
+    function showModels(invoiceNo , status){
+        setInvoice(invoiceNo)
+        setStatus(status)
+        setModalVisible(true)
+    }
 	return (
 		<MainScreen>
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => {
+                    setModalVisible(!modalVisible);
+                }}
+            >
+                <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        <Text style={{fontSize: 17,paddingHorizontal: 10}}>Are you sure you want to change the status of invoice.?</Text>
+                        <View style={{flexDirection: 'row',width : '90%',marginTop: 10 ,justifyContent: 'space-between'}}>
+                            <Pressable
+                                style={[styles.button, styles.buttonClose]}
+                                onPress={() => setModalVisible(!modalVisible)}
+                            >
+                                <Text style={{backgroundColor: 'red' , borderRadius: 2,color: 'white',paddingVertical: 10 ,paddingHorizontal: 13,elevation: 5}}>Cancel</Text>
+                            </Pressable>
+                            <Pressable
+                                style={[styles.button, styles.buttonClose]}
+                                onPress={() => changeStatus() }
+                            >
+                                <Text style={{backgroundColor:Colors.primary , borderRadius: 2,color: 'white',paddingVertical: 10 ,paddingHorizontal: 13,elevation: 5}}>Continue</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
 			<View style={{flex:1}}>
 				{(ActInd == true) ?
 					<View style={{ flex:1,position:'absolute',justifyContent:'center',height:'100%',width: '100%',backgroundColor: '#ededed',zIndex:9999,opacity: 0.5}} >
@@ -435,6 +470,7 @@ export default function AddQuantity({navigation}) {
 					</View>
 				:
 					<View style={styles.itemListSection}>
+                        
                         {(printingIndicator)?
                             <View style={{ position: 'absolute',height: win.height,width: win.width,backgroundColor: '#e8e8e8',zIndex: 9999,opacity: 0.5,justifyContent: 'center',alignItems: 'center'}}>
                                 <ActivityIndicator size="large" color={Colors.primary} />
@@ -443,28 +479,41 @@ export default function AddQuantity({navigation}) {
                         :
                             <View></View>
                         }
-                        <TextInput placeholder="Search Buyer By Invoice no" placeholderTextColor="lightgrey" style={styles.textInput} onChange={(value) => { searchBuyer(value.nativeEvent.text) } } />
+                        {/* <TextInput placeholder="Search Buyer By Invoice no" placeholderTextColor="lightgrey" style={styles.textInput} onChange={(value) => { searchBuyer(value.nativeEvent.text) } } /> */}
+                        
                         <ScrollView vertical='true'>
-                            {(selectedLoadCount != undefined && selectedLoadCount != null) ?
-                                Object.values(selectedLoadCount).map((l, i) => (
+                            {(creditData != undefined && creditData != null) ?
+                                Object.values(creditData).map((l, i) => (
                                     (l != null)?
                                     <TouchableHighlight key={i}>
-                                            <ListItem bottomDivider key={i}>
-                                                <ListItem.Content key={i}>
-                                                    <ListItem.Title key={i} style={{fontSize: 14}} allowFontScaling={false}>
-                                                        {l[0]["buyer_rel"].name}
-                                                    </ListItem.Title>
-                                                    <ListItem.Subtitle allowFontScaling={false} >
-                                                        <Text style={{fontSize: 10}}>{l[0].invoice_no}</Text>
-                                                    </ListItem.Subtitle>
-                                                </ListItem.Content>
-                                                <View>
-                                                    <Pressable style={{backgroundColor: Colors.primary,paddingHorizontal: 20,paddingVertical: 10}} onPress={() => { printReceipt(l) }} >
-                                                        <Text style={{color: 'white'}}>Print</Text>
+                                        <ListItem bottomDivider key={i} >
+                                            <ListItem.Content key={i} >
+                                                <ListItem.Title key={i} style={{fontSize: 14}} allowFontScaling={false}>
+                                                    {l[0]["buyer_rel"].name}
+                                                </ListItem.Title>
+                                                <ListItem.Subtitle allowFontScaling={false} >
+                                                    <Text style={{fontSize: 10}}>{l[0].invoice_no}</Text>
+                                                </ListItem.Subtitle>
+                                            </ListItem.Content>
+                                            <View style={{ flexDirection: 'column' }}>
+                                                
+                                                <View style={{  }}>
+                                                    <Pressable style={{width: 80,backgroundColor: 'red',paddingHorizontal: 12,paddingVertical: 2,borderRadius: 5}} onPress={() => { showDropdown(l[0].invoice_no) }} >
+                                                        <Text style={{color: 'white'}}>un-settled</Text>
                                                     </Pressable>
                                                 </View>
-                                            </ListItem>
-                                        </TouchableHighlight>
+                                                {( selectedPerson == l[0].invoice_no )?
+                                                    <View style={{backgroundColor: 'white',zIndex: 99999,elevation: 5,padding: 10,borderRadius: 5,flexDirection: 'row',justifyContent: 'space-between',width: 150}}>
+                                                        <Pressable onPress={ () => { showModels( l[0].invoice_no , 'cash' ) }}><Text >Cash</Text></Pressable>
+                                                        <Text style={{borderRightColor: '#ededed',borderRightWidth: 1}}></Text>
+                                                        <Pressable onPress={ () => { showModels( l[0].invoice_no , 'bank' ) }}><Text>Bank Transfer</Text></Pressable>
+                                                    </View>
+                                                :
+                                                    <View></View>
+                                                }
+                                            </View>
+                                        </ListItem>
+                                    </TouchableHighlight>
                                     :
                                         <View></View>
                                 ))
@@ -476,6 +525,8 @@ export default function AddQuantity({navigation}) {
                         </ScrollView>
                     </View>
 				}
+                {(model)? <View style={{ backgroundColor: '#ededed',flex: 1,position: 'absolute',width: '100%', height: '100%',justifyContent: 'center',opacity: 0.5}}><Text style={{textAlign: 'center'}}><ActivityIndicator size="large" color={Colors.primary} /></Text></View> : <View></View> }
+                
 			</View>
 		</MainScreen>
 	);
@@ -556,5 +607,28 @@ const styles = StyleSheet.create({
         paddingHorizontal: 17,
         borderRadius: 100,
         color: '#000'
-    }
+    },
+	centeredView: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		marginTop: 22
+	},
+	 modalView: {
+			margin: 20,
+			backgroundColor: "white",
+			borderRadius: 20,
+			height: 130,
+			width: "67%",
+			alignItems: "center",
+			shadowColor: "#000",
+			shadowOffset: {
+				width: 0,
+				height: 2
+			},
+			shadowOpacity: 0.25,
+			shadowRadius: 4,
+			elevation: 5,
+			justifyContent: 'center'
+		},
 });

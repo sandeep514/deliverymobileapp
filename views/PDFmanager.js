@@ -10,12 +10,17 @@ import { useRef } from 'react';
 import { SaveOrder } from '../api/apiService';
 import {Colors} from './../components/Colors';
 import {widthToDp, heightToDp} from '../utils/Responsive';
+import { BackHandler } from 'react-native';
 
 var paired = [];
 let totalAmount = 0;
 let setUpdatedDataArray = [];
 
 export default function PDFmanager({navigation , text, onOK}) {
+    var totalAmountVat = 0;
+    var totalAmountWithoutVat = 0;
+    var AmountVat = 0;
+
     const ref = useRef();
 	const win = Dimensions.get('window');
 
@@ -31,22 +36,73 @@ export default function PDFmanager({navigation , text, onOK}) {
 	const [saveOrderActivIndictor , setSaveOrderActivIndictor] = useState(false);
 	const [savedBuyerData , setSavedBuyerData] = useState();
 	const [showVAT , setShowVAT] = useState(false);
+    const [VatProductTotal , setVatProductTotal] = useState(0);
+    const [nonVATTotal , setNonVATTotal] = useState(0);
+    const [VATTotal , setVATTotal] = useState(0);
+    const [WithoutVatProductTotal , setWithoutVatProductTotal] = useState(0);
 
 	let setBase64Image = '';
-
+    
     useEffect(() => {
+        
+
+
+        AsyncStorage.setItem('selectedLoadedItemsByQty', JSON.stringify({}));
         AsyncStorage.getItem('currentVATstatus').then((res) => {
-            console.log(res);
             if( res == '1' ){
                 setShowVAT(true);
             }else{
                 setShowVAT(false);
             }
-        })
-        AsyncStorage.getItem('orderSaveReponce').then((result) => {
-            
-            setSavedOrderResponce(JSON.parse(result));     
+        });
+        totalAmountVat = 0;
+        AmountVat = 0;
+        totalAmountWithoutVat = 0;
+        AsyncStorage.getItem('orderSaveReponce').then((result) => {    
+            setSavedOrderResponce(JSON.parse(result));
             for(let i = 0 ; i < JSON.parse(result).length ; i++){
+
+                if( JSON.parse(result)[i]['has_vat'] == 1 || JSON.parse(result)[i]['sale_item_rel']['itemcategory'] == 'EGGS'){
+                    if(JSON.parse(result)[i]['sale_item_rel']['itemcategory'] == 'EGGS'){
+                        let qty = JSON.parse(result)[i]['qty'];
+                        let sale_price = JSON.parse(result)[i]['sale_price'];
+                        
+                        // setVatProductTotal( (parseFloat(VatProductTotal) + (parseFloat(qty)*parseFloat(sale_price))) );
+                        totalAmountVat = (parseFloat(totalAmountVat) + (parseFloat(qty)*parseFloat(sale_price))) 
+                        AmountVat = (parseFloat(AmountVat) + (parseFloat(qty)*parseFloat(sale_price))) 
+
+                        setVatProductTotal(totalAmountVat);
+                        setVATTotal(AmountVat)
+                    }
+                    if( JSON.parse(result)[i]['has_vat'] == 1 ){
+                        let qty = JSON.parse(result)[i]['qty'];
+                        let sale_price = JSON.parse(result)[i]['sale_price'];
+                        let totalPriceAfterVAT = (((qty*sale_price) *1.20));
+                        let amount = (qty*sale_price);
+
+                        AmountVat = (parseFloat(AmountVat) + (parseFloat(qty)*parseFloat(sale_price))) 
+                        totalAmountVat = (parseFloat(totalAmountVat) + parseFloat(totalPriceAfterVAT)) 
+
+                        setVatProductTotal(totalAmountVat);
+                        setVATTotal(AmountVat)
+
+                    }
+                }
+
+                if( JSON.parse(result)[i]['has_vat'] == 0 && JSON.parse(result)[i]['sale_item_rel']['itemcategory'] != 'EGGS' ){
+                    
+                    if( JSON.parse(result)[i]['has_vat'] == 0 ){
+                        let qty = JSON.parse(result)[i]['qty'];
+                        let sale_price = JSON.parse(result)[i]['sale_price'];
+                        let totalPriceAfterVAT = ( (qty*sale_price) );
+                        
+                        totalAmountWithoutVat = (parseFloat(totalAmountWithoutVat) + parseFloat(totalPriceAfterVAT)) 
+                        setWithoutVatProductTotal(totalAmountWithoutVat)
+                    }
+                }
+
+
+
                 if( JSON.parse(result)[i]['sale_item_rel']['itemcategory'] == 'EGGS' || JSON.parse(result)[i]['sale_item_rel']['itemcategory'] == 'eggs' ){
                     setHasNonVatProducts(true);
                 }else{
@@ -104,9 +160,16 @@ export default function PDFmanager({navigation , text, onOK}) {
             alert(err);
         },
         );
-
+        BackHandler.addEventListener('hardwareBackPress', () => true)
+        return () =>{
+            BackHandler.removeEventListener('hardwareBackPress', () => true)
+            AsyncStorage.setItem('orderSaveReponce' , JSON.stringify({}))
+            setSavedOrderResponce();
+        }
     }, []);
-    
+    function handleBackButtonClick() {
+        navigation.navigate('Dashboard');
+    }
     const handleSignature2 = signature => {
         let baseImage = (signature).replace('data:image/png;base64,' , '');
         setBase64Image = baseImage;
@@ -133,6 +196,7 @@ export default function PDFmanager({navigation , text, onOK}) {
 	const showToast = (message) => {
 		ToastAndroid.showWithGravityAndOffset(message,ToastAndroid.LONG,ToastAndroid.BOTTOM,0,20);
 	};
+
     printDesign = async () => {
 
             await BluetoothEscposPrinter.printerAlign(
@@ -249,31 +313,18 @@ export default function PDFmanager({navigation , text, onOK}) {
         );
         if( hasNonVatProducts ){
             await BluetoothEscposPrinter.printText('\n\r', {});
-            await BluetoothEscposPrinter.printerAlign(
-                BluetoothEscposPrinter.ALIGN.CENTER,
-            );
-            await BluetoothEscposPrinter.printText(
-                'Items without VAT',
-                {encoding: 'GBK',
-                    codepage: 0,
-                    widthtimes: 0,
-                    heigthtimes: 0,
-                    fonttype: 1
-                }
-            );
-            await BluetoothEscposPrinter.printText('\n\r', {});
-            await BluetoothEscposPrinter.printText('\n\r', {});
 
-            let columnWidthsHeaderPhone = [6,6,9,9];
+            let columnWidthsHeaderPhone = [5,7,7,7,7];
             await BluetoothEscposPrinter.printColumn(
                 columnWidthsHeaderPhone,
                     [
                         BluetoothEscposPrinter.ALIGN.LEFT,
                         BluetoothEscposPrinter.ALIGN.CENTER,
                         BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
                         BluetoothEscposPrinter.ALIGN.RIGHT,
                     ],
-                    ['Qty', 'Price','VAT','Amount'],
+                    ['Qty', 'Price','Amount','VAT','Total'],
                 {},
             );
 
@@ -282,20 +333,30 @@ export default function PDFmanager({navigation , text, onOK}) {
                 {},
             );
             
-            let columnWidths = [6,6,9,9];
+            let columnWidths = [5,7,7,7,7];
+            let columnWidthsTotal = [8,2,8,8,7];
             for(let i = 0 ; i < savedOrderResonce.length ; i++){
-                if( savedOrderResonce[i]['sale_item_rel'].itemcategory == 'EGGS' ){
+                if( savedOrderResonce[i]['sale_item_rel'].itemcategory == 'EGGS' || savedOrderResonce[i].has_vat){
                     let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
                     let salePrice = savedOrderResonce[i]['sale_price'];
                     let qty = savedOrderResonce[i]['qty'];
-                    let amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
+                    let vat = 0;
+                    let amount = 0;
+                    if( savedOrderResonce[i]['sale_item_rel'].itemcategory != 'EGGS' ){
+                        vat = (( (( ( (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']) * 1.20 ) - (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']))) ).toFixed(2)).toString();
+                    }
+                    if( savedOrderResonce[i]['sale_item_rel'].itemcategory == 'EGGS' ){
+                        amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
+                    }else{
+                        amount = (( (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']) * 1.20 ).toFixed(2)).toString();
+                    }
     
                     totalAmount = (parseFloat(totalAmount));
                     await BluetoothEscposPrinter.printerAlign(
                         BluetoothEscposPrinter.ALIGN.LEFT,
                     );
                     await BluetoothEscposPrinter.printText(
-                        'Item: '+sitem,
+                        sitem,
                         {},
                     );
                     await BluetoothEscposPrinter.printText(
@@ -309,16 +370,38 @@ export default function PDFmanager({navigation , text, onOK}) {
                             BluetoothEscposPrinter.ALIGN.LEFT,
                             BluetoothEscposPrinter.ALIGN.CENTER,
                             BluetoothEscposPrinter.ALIGN.CENTER,
+                            BluetoothEscposPrinter.ALIGN.CENTER,
                         ],
-                        [qty, '$'+salePrice,'$'+(((amount-((amount*100)/120)).toFixed(2))), '$'+amount],
+                        [qty, '$'+salePrice,'$'+(qty*salePrice).toFixed(2),'$'+(vat).toFixed(2), '$'+amount],
                     {});
-                    await BluetoothEscposPrinter.printText('\n\r', {});
+                    // await BluetoothEscposPrinter.printText('\n\r', {});
                 }
             }
+            await BluetoothEscposPrinter.printText(
+                '--------------------------------\n\r',
+                {},
+            );
+            await BluetoothEscposPrinter.printColumn(
+                columnWidthsTotal,
+                [
+                    BluetoothEscposPrinter.ALIGN.LEFT,
+                    BluetoothEscposPrinter.ALIGN.CENTER,
+                    BluetoothEscposPrinter.ALIGN.CENTER,
+                    BluetoothEscposPrinter.ALIGN.CENTER,
+                    BluetoothEscposPrinter.ALIGN.RIGHT,
+                ],
+                ["Total: ", '','$'+(VATTotal).toFixed(2),'$'+(VatProductTotal-VATTotal).toFixed(2), '$'+(VatProductTotal).toFixed(2)],
+            {});
+            await BluetoothEscposPrinter.printText(
+                '--------------------------------\n\r',
+                {},
+            );
+            await BluetoothEscposPrinter.printText('\n\r', {});
+
             
         }
         
-        if(hasVatProducts){
+        if(WithoutVatProductTotal > 0){
 
             await BluetoothEscposPrinter.printText('\n\r', {});
             await BluetoothEscposPrinter.printerAlign(
@@ -334,32 +417,16 @@ export default function PDFmanager({navigation , text, onOK}) {
             });
 
             await BluetoothEscposPrinter.printText('\n\r', {});
-            await BluetoothEscposPrinter.printText('\n\r', {});
-            await BluetoothEscposPrinter.printerAlign(
-                BluetoothEscposPrinter.ALIGN.CENTER,
-            );
-            await BluetoothEscposPrinter.printText(
-                'Items with VAT',
-                {encoding: 'GBK',
-                    codepage: 0,
-                    widthtimes: 0,
-                    heigthtimes: 0,
-                    fonttype: 1
-                }
-            );
-            await BluetoothEscposPrinter.printText('\n\r', {});
-            await BluetoothEscposPrinter.printText('\n\r', {});
 
-            let columnWidthsHeaderPhoneVat = [6,6,9,9];
+            let columnWidthsHeaderPhoneVat = [10,10,10];
             await BluetoothEscposPrinter.printColumn(
                 columnWidthsHeaderPhoneVat,
                     [
                         BluetoothEscposPrinter.ALIGN.LEFT,
                         BluetoothEscposPrinter.ALIGN.LEFT,
                         BluetoothEscposPrinter.ALIGN.CENTER,
-                        BluetoothEscposPrinter.ALIGN.CENTER,
                     ],
-                    ['Qty', 'Price', 'VAT','Amount'],
+                    ['Qty', 'Price','Amount'],
                 {},
             );
     
@@ -369,18 +436,20 @@ export default function PDFmanager({navigation , text, onOK}) {
             );
     
             for(let i = 0 ; i < savedOrderResonce.length ; i++){
-                if( savedOrderResonce[i]['sale_item_rel'].itemcategory != 'EGGS' ){
+                if( savedOrderResonce[i]['sale_item_rel'].itemcategory != 'EGGS' && !savedOrderResonce[i]['has_vat'] ){
                     let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
                     let salePrice = savedOrderResonce[i]['sale_price'];
                     let qty = savedOrderResonce[i]['qty'];
                     let amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
-    
+                    let vat = 0;
+
+
                     totalAmount = (parseFloat(totalAmount));
                     await BluetoothEscposPrinter.printerAlign(
                         BluetoothEscposPrinter.ALIGN.LEFT,
                     );
                     await BluetoothEscposPrinter.printText(
-                        'Item: '+sitem,
+                        sitem,
                         {},
                     );
                     await BluetoothEscposPrinter.printText(
@@ -388,27 +457,36 @@ export default function PDFmanager({navigation , text, onOK}) {
                         {},
                     );
 
-                    let columnWidthsVat = [6,6,9,9];
+                    let columnWidthsVat = [10,10,10];
                     await BluetoothEscposPrinter.printColumn(
                         columnWidthsVat,
                         [
-                            BluetoothEscposPrinter.ALIGN.LEFT,
-                            BluetoothEscposPrinter.ALIGN.LEFT,
+                            BluetoothEscposPrinter.ALIGN.CENTER,
                             BluetoothEscposPrinter.ALIGN.CENTER,
                             BluetoothEscposPrinter.ALIGN.CENTER,
                         ],
-                        [qty, '$'+salePrice,'$'+(((amount-((amount*100)/120)).toFixed(2))),'$'+amount],
+                        [qty, '$'+salePrice,'$'+amount],
                     {});
                     await BluetoothEscposPrinter.printText('\n\r', {});
                 }
             }
+            await BluetoothEscposPrinter.printerAlign(
+                BluetoothEscposPrinter.ALIGN.RIGHT,
+            );
+            await BluetoothEscposPrinter.printText(
+                'Total:'+(WithoutVatProductTotal).toFixed(2),
+                {
+                }
+            );
+            await BluetoothEscposPrinter.printText('\n\r', {});
+
+            await BluetoothEscposPrinter.printText(
+                '--------------------------------\n\r',
+                {},
+            );
         }
 
-        await BluetoothEscposPrinter.printText(
-            '--------------------------------\n\r',
-            {},
-        );
-        let columnWidthsVat = [6,6,9,9];
+        let columnWidthsVat = [2,2,14,10];
         await BluetoothEscposPrinter.printColumn(
             columnWidthsVat,
             [
@@ -417,7 +495,7 @@ export default function PDFmanager({navigation , text, onOK}) {
                 BluetoothEscposPrinter.ALIGN.CENTER,
                 BluetoothEscposPrinter.ALIGN.RIGHT,
             ],
-            ['', '', 'Total: ','$'+(totalAmount).toFixed(2)],
+            ['', '', 'Grand Total: ','$'+(WithoutVatProductTotal+VatProductTotal).toFixed(2)],
             {
             },
         );
@@ -462,8 +540,6 @@ export default function PDFmanager({navigation , text, onOK}) {
 
         await BluetoothEscposPrinter.printText('\n\r', {});
         await BluetoothEscposPrinter.printText('\n\r', {});
-        await BluetoothEscposPrinter.printText('\n\r', {});
-        await BluetoothEscposPrinter.printText('\n\r', {});
     };
 
     printReceipt = () => {
@@ -488,134 +564,170 @@ export default function PDFmanager({navigation , text, onOK}) {
             <View style={styles.bodyContainer }>
                 <View style={{flexDirection: 'row',borderWidth: 1 ,borderColor: 'red',height: '100%'}}>
                     <View style={{width: '50%'}} >
-                        <ScrollView>
-                            <View >
-                                <Text style={{fontSize: 20, color: 'black', fontWeight: '700',backgroundColor: 'white',textAlign: 'center'}}>
-                                    Invoice
-                                </Text>
-                                <Text style={{ fontSize: 30,textAlign: 'center'}}>UK Inch</Text>
-                                <Text style={{ fontSize: 15,textAlign: 'center'}}>94 Staceway Worth, Crawley, RH107YR</Text>
-                                <Text style={{ fontSize: 15,textAlign: 'center'}}>Phone: 07917105510</Text>
-                                <Text style={{ fontSize: 15,textAlign: 'center'}}>Email: Ekinch2@gmail.com</Text>
-                                <Text style={{ fontSize: 15,textAlign: 'left',marginLeft: 20}}>INVOICE: {(savedOrderResonce != undefined)? savedOrderResonce[0]['invoice'] : ''}</Text>
-                                <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,marginTop: 20,borderBottomColor:'black',borderTopColor:'black',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1,padding: 10 }}>
-                                    <Text style={{fontWeight: 'bold',width: 100}}>Customer</Text>
-                                    <Text style={{fontWeight: 'bold'}}></Text>
-                                    <Text style={{fontWeight: 'bold'}}></Text>
-                                    <Text style={{fontWeight: 'bold'}}>Date: { (savedOrderResonce != undefined) ? savedOrderResonce[0]['ddate'] : ''   }</Text>
+                              <ScrollView>
+                    <View >
+                        <Text style={{fontSize: 20, color: 'black', fontWeight: '700',backgroundColor: 'white',textAlign: 'center'}}>
+                            Invoice
+                        </Text>
+                        <Text style={{ fontSize: 30,textAlign: 'center'}}>UK Inch</Text>
+                        <Text style={{ fontSize: 15,textAlign: 'center'}}>94 Staceway Worth, Crawley, RH107YR</Text>
+                        <Text style={{ fontSize: 15,textAlign: 'center'}}>Phone: 07917105510</Text>
+                        <Text style={{ fontSize: 15,textAlign: 'center'}}>Email: Ekinch2@gmail.com</Text>
+                        <Text style={{ fontSize: 15,textAlign: 'left',marginLeft: 20}}>INVOICE: {(savedOrderResonce != undefined)? savedOrderResonce[0]['invoice'] : ''}</Text>
+                        <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,marginTop: 20,borderBottomColor:'black',borderTopColor:'black',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1,padding: 10 }}>
+                            <Text style={{fontWeight: 'bold',width: 100}}>Customer</Text>
+                            <Text style={{fontWeight: 'bold'}}></Text>
+                            <Text style={{fontWeight: 'bold'}}></Text>
+                            <Text style={{fontWeight: 'bold'}}>Date: { (savedOrderResonce != undefined) ? savedOrderResonce[0]['ddate'] : ''   }</Text>
+                        </View>
+                        <View style={{ flex: 0.2, flexDirection:'row',paddingHorizontal: 20,marginTop: 20}}>
+                            <Text style={{width: 100}}>Name: </Text>
+                            <Text style={{}}>{(savedBuyerData != undefined) ? savedBuyerData['name'] : ''} </Text>
+                        </View>
+                        <View style={{ flex: 0.2, flexDirection:'row',paddingHorizontal: 20,marginTop: 20}}>
+                            <Text style={{width: 100}}>Address: </Text>
+                            <Text style={{textAlign: 'left'}}>{(savedBuyerData != undefined) ? savedBuyerData['address'] : ''} </Text>
+                        </View>
+                        <View style={{ flex: 0.2, flexDirection:'row',paddingHorizontal: 20,marginTop: 20}}>
+                            <Text style={{width: 100}}>Phone: </Text>
+                            <Text style={{}}>{(savedBuyerData != undefined) ? savedBuyerData['contact_no'] : ''} </Text>
+                        </View>
+                        {( hasNonVatProducts ) ?
+                            <View>
+                                {/* <View style={{marginTop: 20,paddingTop: 10,borderTopColor: 'black', borderTopWidth: 1}}><Text style={{justifyContent: 'center',textAlign: 'center',fontWeight:'bold'}}>Items without VAT</Text></View> */}
+                                <View style={{ flex: 0.2,borderTopColor: 'black', borderTopWidth: 1, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,borderBottomColor:'black',marginTop: 20,borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1 ,padding: 10}}>
+                                    <Text style={{fontWeight: 'bold'}}>Qty</Text>
+                                    <Text style={{fontWeight: 'bold'}}>Price</Text>
+                                    <Text style={{fontWeight: 'bold'}}>Amount</Text>
+                                    <Text style={{fontWeight: 'bold'}}>VAT</Text>
+                                    <Text style={{fontWeight: 'bold'}}>Total(inc)</Text>
                                 </View>
-                                <View style={{ flex: 0.2, flexDirection:'row',paddingHorizontal: 20,marginTop: 20}}>
-                                    <Text style={{width: 100}}>Name: </Text>
-                                    <Text style={{}}>{(savedBuyerData != undefined) ? savedBuyerData['name'] : ''} </Text>
+                                <View style={{marginTop: 10}}>
                                 </View>
-                                <View style={{ flex: 0.2, flexDirection:'row',paddingHorizontal: 20,marginTop: 20}}>
-                                    <Text style={{width: 100}}>Address: </Text>
-                                    <Text style={{textAlign: 'left'}}>{(savedBuyerData != undefined) ? savedBuyerData['address'] : ''} </Text>
-                                </View>
-                                <View style={{ flex: 0.2, flexDirection:'row',paddingHorizontal: 20,marginTop: 20}}>
-                                    <Text style={{width: 100}}>Phone: </Text>
-                                    <Text style={{}}>{(savedBuyerData != undefined) ? savedBuyerData['contact_no'] : ''} </Text>
-                                </View>
-                                {( hasNonVatProducts ) ?
-                                    <View>
-                                        <View style={{marginTop: 20,paddingTop: 10,borderTopColor: 'black', borderTopWidth: 1}}><Text style={{justifyContent: 'center',textAlign: 'center',fontWeight:'bold'}}>Items without VAT</Text></View>
-                                        <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,borderBottomColor:'black',borderTopColor:'transparent',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1 ,padding: 10}}>
-                                            <Text style={{fontWeight: 'bold'}}>Qty</Text>
-                                            <Text style={{fontWeight: 'bold'}}>Price</Text>
-                                            <Text style={{fontWeight: 'bold'}}>VAT</Text>
-                                            <Text style={{fontWeight: 'bold'}}>Amt(inc)</Text>
-                                        </View>
-                                        <View style={{marginTop: 10}}>
-                                        </View>
-                                    </View>                                
-                                :
-                                    <View></View>
-                                }
+                            </View>                                
+                        :
+                            <View></View>
+                        }
                                 
-                                    {(savedOrderResonce != undefined) ?
-                                        savedOrderResonce.map((value , key) => {
-                                            return (
-                                                <View key={key}>
-                                                    {( value['sale_item_rel'].itemcategory == 'EGGS' ) ?
-                                                    <View>
-                                                        <Text style={{ width: '100%',marginLeft: 20}}><Text style={{ fontWeight: 'bold' }}>Item: </Text>{value['sale_item_rel'].name}</Text>
-                                                        <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
-                                                            {/* <Text style={{ width: 90}}>{value['sale_item_rel'].name}</Text> */}
-                                                            <Text style={{ }}>{value['qty']}</Text>
-                                                            <Text style={{ }}>£{value['sale_price']}</Text>
-                                                            <Text style={{ }}>£{((value['sale_price']*100) / 120).toFixed(2)}</Text>
-                                                            <Text style={{ }}>£{((value['sale_price'] * value['qty']).toFixed(2)).toString()}</Text>
-                                                        </View>
-                                                    </View>
-
-                                                    :
-                                                        <View></View>
-                                                    }
-                                                
-                                                </View>
-                                            )
-                                        })
-                                    : 
-                                        <View></View>
-                                    }
-
-                                    {( hasVatProducts ) ?
-                                        <View>
-                                            <Text style={{textAlign: 'center',marginTop: 30,marginBottom: 10}}>*******************************</Text>
-                                            <View style={{marginTop: 20,paddingTop: 10,borderTopColor: 'black', borderTopWidth: 1}}><Text style={{justifyContent: 'center',textAlign: 'center',fontWeight:'bold'}}>Items with VAT</Text></View>
-                                            <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,borderBottomColor:'black',borderTopColor:'transparent',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1 ,padding: 10}}>
-                                                <Text style={{fontWeight: 'bold'}}>Qty</Text>
-                                                <Text style={{fontWeight: 'bold'}}>Price</Text>
-                                                <Text style={{fontWeight: 'bold'}}>VAT</Text>
-                                                <Text style={{fontWeight: 'bold'}}>Amt(inc)</Text>
-                                            </View>
-                                            <View style={{marginTop: 10}}>
-                                            </View>
-                                        </View>
-                                    :
-                                        <View></View>
-                                    }
+                            {(savedOrderResonce != undefined) ?
+                                savedOrderResonce.map((value , key) => {
                                     
-                                    {(savedOrderResonce != undefined) ?
-                                        savedOrderResonce.map((value , key) => {
-
-                                            return (
-                                                <View key={key} style={{ borderBottomColor: '#ededed', borderBottomWidth: 1,paddingVertical: 15 }}>
-                                                    {( value['sale_item_rel'].itemcategory != 'EGGS' ) ?
-                                                        <View key={key}>
-                                                            <Text style={{ width: '100%',marginLeft: 20}}><Text style={{ fontWeight: 'bold' }}>Item: </Text>{value['sale_item_rel'].name}</Text>
-                                                            <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
-                                                                <Text style={{ }}>{value['qty']}</Text>
-                                                                <Text style={{ }}>£{value['sale_price']}</Text>
-                                                                <Text style={{ }}>£{((value['sale_price']*100) / 120).toFixed(2)}</Text>
-                                                                <Text style={{ }}>£{((value['sale_price'] * value['qty']).toFixed(2)).toString()}</Text>
-                                                            </View>
-                                                            {/* <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
-                                                                <Text style={{ width: 90}}>{}</Text>
-                                                                <Text style={{ }}>{}</Text>
-                                                                <Text style={{ fontWeight: 'bold'}}>VAT</Text>
-                                                                <Text style={{ }}>£{((value['sale_price']*100) / 120).toFixed(2)}</Text>
-                                                            </View> */}
-
-                                                        </View>
-                                                    :
-                                                        <View></View>
-                                                    }
+                                    return (
+                                        <View key={key} >
+                                            {( value['sale_item_rel'].itemcategory == 'EGGS' ) ?
+                                                <View style={{ borderBottomColor: '#ededed', borderBottomWidth: 1,paddingVertical: 15 }}>
+                                                    <Text style={{ width: '100%',marginLeft: 20}}><Text style={{ fontWeight: 'bold' }}> </Text>{value['sale_item_rel'].name}</Text>
+                                                    <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
+                                                        {/* <Text style={{ width: 90}}>{value['sale_item_rel'].name}</Text> */}
+                                                        <Text style={{ }}>{value['qty']}</Text>
+                                                        <Text style={{ }}>£{(value['sale_price'])}</Text>
+                                                        <Text style={{ }}>£{(value['sale_price'] * value['qty']).toFixed(2)}</Text>
+                                                        <Text style={{ }}>£ 0</Text>
+                                                        <Text style={{ }}>£{((value['sale_price'] * value['qty']).toFixed(2)).toString()}</Text>
+                                                    </View>
                                                 </View>
-                                            )
-                                        })
-                                    : 
-                                        <View></View>
-                                    }
-                                <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,marginTop: 20}}>
-                                    <Text style={{fontWeight: 'bold',width: 100}}></Text>
-                                    <Text style={{fontWeight: 'bold'}}></Text>
-                                    <Text style={{fontWeight: 'bold'}}>Total:</Text>
-                                    <Text style={{fontWeight: 'bold'}}>£{(totalAmount).toFixed(2)}</Text>
-                                </View>
+                                            :
+                                                <View></View>
+                                            } 
+                                            {( value['sale_item_rel'].itemcategory != 'EGGS' && value.has_vat ) ?
+                                                
+                                                <View style={{ borderBottomColor: '#ededed', borderBottomWidth: 1,paddingVertical: 15 }}>
+                                                    <Text style={{ width: '100%',marginLeft: 20}}><Text style={{ fontWeight: 'bold' }}> </Text>{value['sale_item_rel'].name}</Text>
+                                                    <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
+                                                        {/* <Text style={{ width: 90}}>{value['sale_item_rel'].name}</Text> */}
+                                                        <Text style={{ }}>{value['qty']}</Text>
+                                                        <Text style={{ }}>£{(value['sale_price'])}</Text>
+                                                        <Text style={{ }}>£{(value['sale_price'] * value['qty']).toFixed(2)}</Text>
+                                                        <Text style={{ }}>£{((((value['qty'] * value['sale_price'])*1.20)) -  (value['qty'] * value['sale_price'])).toFixed(2)}</Text>
+                                                        <Text style={{ }}>£{( parseFloat((value['sale_price'] * value['qty']).toFixed(2)) * 1.20).toFixed(2)}</Text>
+                                                    </View>
+                                                </View>
+                                            :
+                                                <View></View>
+                                            } 
+                                        </View>
+                                    )
+                                })
+                                
+                            : 
+                                <View></View>
+                            }
+                            <View style={{flexDirection:'row' ,justifyContent: 'space-between',marginTop: 20}}>
+                                <Text></Text>
+                                {/* <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}>Totall:</Text> £{totalAmountVat.toFixed(2)}</Text> */}
+                                <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}>Total:</Text></Text>
+                                <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}></Text> </Text>
+                                <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}> £{(VATTotal).toFixed(2)}</Text></Text>
+                                <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}> £{(VatProductTotal-VATTotal).toFixed(2)}</Text></Text>
+                                <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}> £{(VatProductTotal).toFixed(2)}</Text></Text>
                             </View>
+                            
+                            {( WithoutVatProductTotal > 0 ) ?
+                                <View>
+                                    <Text style={{textAlign: 'center',marginTop: 30,marginBottom: 10}}>*******************************</Text>
+                                    {/* <View style={{marginTop: 20,paddingTop: 10,borderTopColor: 'black', borderTopWidth: 1}}><Text style={{justifyContent: 'center',textAlign: 'center',fontWeight:'bold'}}>Items with VAT</Text></View> */}
+                                    <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',borderTopColor: 'black', borderTopWidth: 1,paddingHorizontal: 20,borderBottomColor:'black',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1 ,padding: 10}}>
+                                        <Text style={{fontWeight: 'bold'}}>Qty</Text>
+                                        <Text style={{fontWeight: 'bold'}}>Price</Text>
+                                        {/* <Text style={{fontWeight: 'bold'}}>VAT</Text> */}
+                                        <Text style={{fontWeight: 'bold'}}>Amt(inc)</Text>
+                                    </View>
+                                    <View style={{marginTop: 10}}>
+                                    </View>
+                                </View>
+                            :
+                                <View></View>
+                            }
+                            
+                            {(savedOrderResonce != undefined) ?
+                                savedOrderResonce.map((value , key) => {
 
-                        </ScrollView>
+                                    return (
+                                        <View key={key} >
+                                            {( value['sale_item_rel'].itemcategory != 'EGGS' && !value.has_vat  ) ?
+                                                <View key={key} style={{ borderBottomColor: '#ededed', borderBottomWidth: 1,paddingVertical: 15 }}>
+                                                    <Text style={{ width: '100%',marginLeft: 20}}><Text style={{ fontWeight: 'bold' }}></Text>{value['sale_item_rel'].name}</Text>
+                                                    <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
+                                                        <Text style={{ }}>{value['qty']}</Text>
+                                                        <Text style={{ }}>£{value['sale_price']}</Text>
+                                                        {/* <Text style={{ }}>£ 0</Text> */}
+                                                        <Text style={{ }}>£{((value['sale_price'] * value['qty']).toFixed(2)).toString()}</Text>
+                                                    </View>
+                                                    {/* <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
+                                                        <Text style={{ width: 90}}>{}</Text>
+                                                        <Text style={{ }}>{}</Text>
+                                                        <Text style={{ fontWeight: 'bold'}}>VAT</Text>
+                                                        <Text style={{ }}>£{((value['sale_price']*100) / 120).toFixed(2)}</Text>
+                                                    </View> */}
+
+                                                </View>
+                                            :
+                                                <View></View>
+                                            }
+                                        </View>
+                                    )
+                                })
+                            : 
+                                <View></View>
+                            }
+                            {(WithoutVatProductTotal > 0)?    
+                                <View style={{flexDirection:'row' ,justifyContent: 'space-between',marginTop: 20}}>
+                                    <Text></Text>
+                                    {/* <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}>Total:</Text> £{(totalAmountWithoutVat).toFixed(2)}</Text> */}
+                                    <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}>Total: £{(WithoutVatProductTotal).toFixed(2)}</Text></Text>
+                                </View>
+                            :
+                                <View></View>
+                            }
+                        <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,marginTop: 20}}>
+                            <Text style={{fontWeight: 'bold',width: 100}}></Text>
+                            <Text style={{fontWeight: 'bold'}}></Text>
+                            <Text style={{fontWeight: 'bold'}}>Grand Total:</Text>
+                            <Text style={{fontWeight: 'bold'}}>£{(VatProductTotal + WithoutVatProductTotal).toFixed(2)}</Text>
+                        </View>
+                    </View>
+                </ScrollView>
+
                     </View>
                     <View style={{ width: '50%'}}>
                         <View style={{ flex: 2.5 ,width: '100%' }}>
@@ -686,63 +798,117 @@ export default function PDFmanager({navigation , text, onOK}) {
                             <Text style={{width: 100}}>Phone: </Text>
                             <Text style={{}}>{(savedBuyerData != undefined) ? savedBuyerData['contact_no'] : ''} </Text>
                         </View>
-                        <View style={{marginTop: 20,paddingTop: 10,borderTopColor: 'black', borderTopWidth: 1}}><Text style={{justifyContent: 'center',textAlign: 'center',fontWeight:'bold'}}>Items without VAT</Text></View>
-                        <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,borderBottomColor:'black',borderTopColor:'transparent',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1 ,padding: 10}}>
-                            <Text style={{fontWeight: 'bold',width: 100}}>Item</Text>
-                            <Text style={{fontWeight: 'bold'}}>Qty</Text>
-                            <Text style={{fontWeight: 'bold'}}>Price</Text>
-                            <Text style={{fontWeight: 'bold'}}>Amount</Text>
-                        </View>
-                        <View style={{marginTop: 10}}>
-                        </View>
+                        {( hasNonVatProducts ) ?
+                            <View>
+                                {/* <View style={{marginTop: 20,paddingTop: 10,borderTopColor: 'black', borderTopWidth: 1}}><Text style={{justifyContent: 'center',textAlign: 'center',fontWeight:'bold'}}>Items without VAT</Text></View> */}
+                                <View style={{ flex: 0.2,borderTopColor: 'black', borderTopWidth: 1, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,borderBottomColor:'black',marginTop: 20,borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1 ,padding: 10}}>
+                                    <Text style={{fontWeight: 'bold'}}>Qty</Text>
+                                    <Text style={{fontWeight: 'bold'}}>Price</Text>
+                                    <Text style={{fontWeight: 'bold'}}>Amount</Text>
+                                    <Text style={{fontWeight: 'bold'}}>VAT</Text>
+                                    <Text style={{fontWeight: 'bold'}}>Total(inc)</Text>
+                                </View>
+                                <View style={{marginTop: 10}}>
+                                </View>
+                            </View>                                
+                        :
+                            <View></View>
+                        }
+                                
                             {(savedOrderResonce != undefined) ?
                                 savedOrderResonce.map((value , key) => {
-
+                                    
                                     return (
-                                        <View>
+                                        <View key={key} >
                                             {( value['sale_item_rel'].itemcategory == 'EGGS' ) ?
-                                                <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
-                                                    <Text style={{ width: 90}}>{value['sale_item_rel'].name}</Text>
-                                                    <Text style={{ }}>{value['qty']}</Text>
-                                                    <Text style={{ }}>£{value['sale_price']}</Text>
-                                                    <Text style={{ }}>£{((value['sale_price'] * value['qty']).toFixed(2)).toString()}</Text>
-                                                </View>
-                                            :
-                                                <View></View>
-                                            }
-                                         
-                                        </View>
-                                    )
-                                })
-                            : 
-                                <View></View>
-                            }
-                        <Text style={{textAlign: 'center',marginTop: 30,marginBottom: 10}}>*******************************</Text>
-                        <View style={{marginTop: 20,paddingTop: 10,borderTopColor: 'black', borderTopWidth: 1}}><Text style={{justifyContent: 'center',textAlign: 'center',fontWeight:'bold'}}>Items with VAT</Text></View>
-                        <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,borderBottomColor:'black',borderTopColor:'transparent',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1 ,padding: 10}}>
-                            <Text style={{fontWeight: 'bold',width: 100}}>Item</Text>
-                            <Text style={{fontWeight: 'bold'}}>Qty</Text>
-                            <Text style={{fontWeight: 'bold'}}>Price</Text>
-                            <Text style={{fontWeight: 'bold'}}>Amount</Text>
-                        </View>
-                        <View style={{marginTop: 10}}>
-                        </View>
-                            {(savedOrderResonce != undefined) ?
-                                savedOrderResonce.map((value , key) => {
-
-                                    return (
-                                        <View>
-                                            {( value['sale_item_rel'].itemcategory != 'EGGS' ) ?
-                                                <View>
+                                                <View style={{ borderBottomColor: '#ededed', borderBottomWidth: 1,paddingVertical: 15 }}>
+                                                    <Text style={{ width: '100%',marginLeft: 20}}><Text style={{ fontWeight: 'bold' }}> </Text>{value['sale_item_rel'].name}</Text>
                                                     <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
-                                                        <Text style={{ width: 90}}>{value['sale_item_rel'].name}</Text>
+                                                        {/* <Text style={{ width: 90}}>{value['sale_item_rel'].name}</Text> */}
                                                         <Text style={{ }}>{value['qty']}</Text>
-                                                        <Text style={{ }}>£{value['sale_price']}</Text>
+                                                        <Text style={{ }}>£{(value['sale_price'])}</Text>
+                                                        <Text style={{ }}>£{(value['sale_price'] * value['qty']).toFixed(2)}</Text>
+                                                        <Text style={{ }}>£ 0</Text>
                                                         <Text style={{ }}>£{((value['sale_price'] * value['qty']).toFixed(2)).toString()}</Text>
                                                     </View>
                                                 </View>
                                             :
                                                 <View></View>
+                                            } 
+                                            {( value['sale_item_rel'].itemcategory != 'EGGS' && value.has_vat ) ?
+                                                
+                                                <View style={{ borderBottomColor: '#ededed', borderBottomWidth: 1,paddingVertical: 15 }}>
+                                                    <Text style={{ width: '100%',marginLeft: 20}}><Text style={{ fontWeight: 'bold' }}> </Text>{value['sale_item_rel'].name}</Text>
+                                                    <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
+                                                        {/* <Text style={{ width: 90}}>{value['sale_item_rel'].name}</Text> */}
+                                                        <Text style={{ }}>{value['qty']}</Text>
+                                                        <Text style={{ }}>£{(value['sale_price'])}</Text>
+                                                        <Text style={{ }}>£{(value['sale_price'] * value['qty']).toFixed(2)}</Text>
+                                                        <Text style={{ }}>£{((((value['qty'] * value['sale_price'])*1.20)) -  (value['qty'] * value['sale_price'])).toFixed(2)}</Text>
+                                                        <Text style={{ }}>£{( parseFloat((value['sale_price'] * value['qty']).toFixed(2)) * 1.20).toFixed(2)}</Text>
+                                                    </View>
+                                                </View>
+                                            :
+                                                <View></View>
+                                            } 
+                                        </View>
+                                    )
+                                })
+                                
+                            : 
+                                <View></View>
+                            }
+                            <View style={{flexDirection:'row' ,justifyContent: 'space-between',marginTop: 20}}>
+                                <Text></Text>
+                                {/* <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}>Totall:</Text> £{totalAmountVat.toFixed(2)}</Text> */}
+                                <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}>Total:</Text></Text>
+                                <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}></Text> </Text>
+                                <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}> £{(VATTotal).toFixed(2)}</Text></Text>
+                                <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}> £{(VatProductTotal-VATTotal).toFixed(2)}</Text></Text>
+                                <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}> £{(VatProductTotal).toFixed(2)}</Text></Text>
+                            </View>
+                            
+                            {( WithoutVatProductTotal > 0 ) ?
+                                <View>
+                                    <Text style={{textAlign: 'center',marginTop: 30,marginBottom: 10}}>*******************************</Text>
+                                    {/* <View style={{marginTop: 20,paddingTop: 10,borderTopColor: 'black', borderTopWidth: 1}}><Text style={{justifyContent: 'center',textAlign: 'center',fontWeight:'bold'}}>Items with VAT</Text></View> */}
+                                    <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',borderTopColor: 'black', borderTopWidth: 1,paddingHorizontal: 20,borderBottomColor:'black',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1 ,padding: 10}}>
+                                        <Text style={{fontWeight: 'bold'}}>Qty</Text>
+                                        <Text style={{fontWeight: 'bold'}}>Price</Text>
+                                        {/* <Text style={{fontWeight: 'bold'}}>VAT</Text> */}
+                                        <Text style={{fontWeight: 'bold'}}>Amt(inc)</Text>
+                                    </View>
+                                    <View style={{marginTop: 10}}>
+                                    </View>
+                                </View>
+                            :
+                                <View></View>
+                            }
+                            
+                            {(savedOrderResonce != undefined) ?
+                                savedOrderResonce.map((value , key) => {
+
+                                    return (
+                                        <View key={key} >
+                                            {( value['sale_item_rel'].itemcategory != 'EGGS' && !value.has_vat  ) ?
+                                                <View key={key} style={{ borderBottomColor: '#ededed', borderBottomWidth: 1,paddingVertical: 15 }}>
+                                                    <Text style={{ width: '100%',marginLeft: 20}}><Text style={{ fontWeight: 'bold' }}></Text>{value['sale_item_rel'].name}</Text>
+                                                    <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
+                                                        <Text style={{ }}>{(value['qty']).toFixed(2)}</Text>
+                                                        <Text style={{ }}>£{(value['sale_price'])}</Text>
+                                                        {/* <Text style={{ }}>£ 0</Text> */}
+                                                        <Text style={{ }}>£{((value['sale_price'] * value['qty']).toFixed(2)).toString()}</Text>
+                                                    </View>
+                                                    {/* <View key={key} style={{flex: 0.2,flexDirection: 'row',justifyContent:'space-between',paddingHorizontal: 20}}>
+                                                        <Text style={{ width: 90}}>{}</Text>
+                                                        <Text style={{ }}>{}</Text>
+                                                        <Text style={{ fontWeight: 'bold'}}>VAT</Text>
+                                                        <Text style={{ }}>£{((value['sale_price']*100) / 120).toFixed(2)}</Text>
+                                                    </View> */}
+
+                                                </View>
+                                            :
+                                                <View></View>
                                             }
                                         </View>
                                     )
@@ -750,14 +916,22 @@ export default function PDFmanager({navigation , text, onOK}) {
                             : 
                                 <View></View>
                             }
+                            {(WithoutVatProductTotal > 0)?    
+                                <View style={{flexDirection:'row' ,justifyContent: 'space-between',marginTop: 20}}>
+                                    <Text></Text>
+                                    {/* <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}>Total:</Text> £{(totalAmountWithoutVat).toFixed(2)}</Text> */}
+                                    <Text style={{marginRight: 20}}><Text style={{fontWeight: 'bold'}}>Total: £{(WithoutVatProductTotal).toFixed(2)}</Text></Text>
+                                </View>
+                            :
+                                <View></View>
+                            }
                         <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,marginTop: 20}}>
                             <Text style={{fontWeight: 'bold',width: 100}}></Text>
                             <Text style={{fontWeight: 'bold'}}></Text>
-                            <Text style={{fontWeight: 'bold'}}>Total:</Text>
-                            <Text style={{fontWeight: 'bold'}}>£{(totalAmount).toFixed(2)}</Text>
+                            <Text style={{fontWeight: 'bold'}}>Grand Total:</Text>
+                            <Text style={{fontWeight: 'bold'}}>£{(VatProductTotal + WithoutVatProductTotal).toFixed(2)}</Text>
                         </View>
                     </View>
-
                 </ScrollView>
 
             </View>

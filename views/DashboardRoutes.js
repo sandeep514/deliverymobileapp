@@ -7,6 +7,7 @@ import {heightToDp} from '../utils/Responsive';
 import MapView, { Marker } from 'react-native-maps';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPriorityDrivers } from '../api/apiService';
+import { Text } from 'react-native';
 
 const list = [
         {
@@ -44,11 +45,11 @@ const list = [
         function getRoutes(){
             AsyncStorage.getItem('selectedRoute').then((routeId) => {
                 AsyncStorage.getItem('user_id').then((driverid) => {
-                    getPriorityDrivers(driverid , 4).then((res) => {
+                    getPriorityDrivers(driverid , routeId).then((res) => {
                         setHasRoutes(true)
                         setListRoutes(res.data.data);
                     } , (err) =>{
-                        console.log(err)
+
                     })
                 }) 
             })
@@ -97,16 +98,19 @@ const list = [
                         </Pressable>
                     </View> */}
                     <View style={styles.nextButton}>
-                        <Pressable onPress={ () => {  navigation.navigate('ItemsScreenWithQty') }}>
-                            <Icon name="chevron-right" type='font-awesome' color="white"/>
+                        <Pressable onPress={ () => {
+                            
+                            AsyncStorage.setItem('selectedLoadedItemsByQty' , JSON.stringify({}))                         
+                            navigation.navigate('ItemsScreenWithQty') 
+                        }}>
+                            <Icon name="chevron-right" type='font-awesome' color="white" style={{padding: 10}}/>
                         </Pressable>
                     </View>
                     <View style={{padding: 0 , margin: 0}}>
                         <ScrollView >
-
                             { (hasRoutes != false && listRoutes != undefined) ?
                                 listRoutes.map((l, i) => (
-                                    <TouchableHighlight key={i} onPress={(event) => listClicked(l)} >
+                                    <TouchableHighlight key={i} onPress={(event) => listClicked(l)}  >
                                         <ListItem containerStyle={(active == l.id) ? styles.active : styles.unactive} key={i} bottomDivider>
                                         {/* <ListItem key={i} bottomDivider  > */}
                                             <Image source={require('../assets/images/map.png')} style={styles.Avatar} />
@@ -114,7 +118,11 @@ const list = [
                                                 <ListItem.Title>{l.name}</ListItem.Title>
                                                 <ListItem.Title style={{color: 'grey',fontSize: 12}}>{l.address}</ListItem.Title>
                                             </ListItem.Content>
-                                            <ListItem.Chevron/>
+                                                {( l.id == 76 ) ?
+                                                    <View style={{ backgroundColor: 'green' ,paddingHorizontal:10,paddingVertical: 10 , borderRadius: 100 }}><Text style={{color: 'white'}}>P</Text></View>
+                                                :
+                                                    <View></View>
+                                                }
                                         </ListItem>
                                     </TouchableHighlight>
                                 )) 
@@ -145,7 +153,7 @@ const list = [
             height: 70,
             zIndex: 9999,
             top: heightToDp('33.6%'),
-            padding: 18,
+            // padding: 18,
             backgroundColor: Colors.primary,
             borderRadius: 100,
             margin: 10,

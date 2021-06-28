@@ -1,13 +1,13 @@
 import React, {Component} from 'react';
 import {
-  StyleSheet,
-  Image,
-  View,
-  Dimensions,
-  ScrollView,
-  TouchableHighlight,
-  ActivityIndicator,
-  Text
+	StyleSheet,
+	Image,
+	View,
+	Dimensions,
+	ScrollView,
+	TouchableHighlight,
+	ActivityIndicator,
+	Text
 } from 'react-native';
 import {Colors} from './../components/Colors';
 import Icon from 'react-native-vector-icons/FontAwesome';

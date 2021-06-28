@@ -25,16 +25,16 @@ export default function LoadsScreen({navigation , route}) {
 	const [ ActiveIndicatorValue , setActiveIndicatorValue ] = useState(false);
 	const [ selectedLoadedNumber , setSelectedLoadNumber ] = useState();
 	const [ selectedLoads , setSelectedLoads ] = useState();
-	// const showToast = (message) => {
-	// 	ToastAndroid.showWithGravityAndOffset(message,ToastAndroid.LONG,ToastAndroid.BOTTOM,0,20);
-	// };
+	const showToast = (message) => {
+		ToastAndroid.showWithGravityAndOffset(message,ToastAndroid.LONG,ToastAndroid.BOTTOM,0,20);
+	};
 
 	useEffect(() => {
 		getVehicleLoads().then((res) => {
 			setSelectedLoadNumber(res);
-			setActiveIndicatorLoader(false)
 		} , (err) => {
-			// showToast(err);
+			setActiveIndicatorLoader(false)
+			showToast(err);
 		});
 	}, []);
 
@@ -113,7 +113,6 @@ export default function LoadsScreen({navigation , route}) {
 						// let currentLoadRoute = 'Dashboard';
 						// AsyncStorage.getItem('refreshLoad').then((res) => {
 							// currentLoadRoute = res;
-							// console.log(currentLoadRoute);
 							// AsyncStorage.removeItem('refreshLoad');
 							// ( currentLoadRoute == 'Dashboard' ) ? navigation.navigate('Dashboard') : navigation.navigate('Items') 
 						// });		

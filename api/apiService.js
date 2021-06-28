@@ -1,8 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ToastAndroid } from 'react-native';
 import apiClient from './client';
 
 export const imagePrefix = 'https://staging.tauruspress.co.uk/';
 
+export const showToast = (message) => {
+	ToastAndroid.showWithGravityAndOffset(message,ToastAndroid.LONG,ToastAndroid.BOTTOM,0,20);
+};
 export const  generateRandString = () => {
 	return (Math.random() * (9999 - 1) + 1).toFixed(0);
 }
@@ -48,17 +52,19 @@ export const getRoutes = () => {
 // get list loads
 export const getVehicleLoads = () => {
 	return new Promise( (resolve , reject) => {
-		apiClient.get('get-demands-list-by-vehicle/3' ).then( (response) => {
-			if(response.status == 200){
-				if( response.data.data.length > 0 ){
-					resolve(response.data.data);
+		AsyncStorage.getItem('selectedVehicleNo').then((vehicleId) => {
+			apiClient.get('get-demands-list-by-vehicle/'+vehicleId ).then( (response) => {
+				if(response.status == 200){
+					if( response.data.data.length > 0 ){
+						resolve(response.data.data);
+					}else{
+						reject('No load available.');
+					}
 				}else{
 					reject('No load available.');
 				}
-			}else{
-				reject('No load available.');
-			}
-		} );
+			} );
+		})
 	})
 }
 
@@ -134,6 +140,18 @@ export const SaveVehicleNotes = ( newComment ) => {
 	});
 };
 
+export const updatePaymentStatus = ( invoice , status ) => {
+	return new Promise( (resolve , reject) => {
+		apiClient.post('update-invoice-payment-type' , {invoice_number : invoice , payment_type: status}).then((response) => {
+			if(response.data.status == true){
+				resolve(response);
+			}else{
+				reject(response.data.error);
+			}
+		});
+	});
+};
+
 //get Today sale
 export const getTodaySale = ( vehicheNumber , driverId ) => {
 	return new Promise( (resolve , reject) => {
@@ -152,7 +170,6 @@ export const getTodaySale = ( vehicheNumber , driverId ) => {
 //get Today sale
 export const getPriorityDrivers = ( driverId , routeId ) => {
 	return new Promise( (resolve , reject) => {
-		console.log(driverId , routeId);
 		apiClient.get( 'get-buyer-priortity-by-driver/'+driverId+'/'+routeId ).then((response) => {
 			if(response.data.status == true){
 				resolve(response);
@@ -180,7 +197,6 @@ export const getListInvoices = ( vehicheNumber , driverId ) => {
 export const checkIfBuyerHasVAT = ( buyerId ) => {
 	return new Promise( (resolve , reject) => {
 		apiClient.get( 'check-buyer-has-vat/'+buyerId ).then((response) => {
-			console.log(response)
 			if(response.data.status == true){
 				resolve(response);
 			}else{
@@ -203,11 +219,24 @@ export const getCartItemDetails = ( postedData ) => {
 		
 	});
 };
+//add tp cart
+export const getPendingSales = ( postedData ) => {
+	return new Promise( (resolve , reject) => {
+		apiClient.post('get-pending-sales' , { data : postedData}).then((response) => {
+			if(response.data.status == true){
+				resolve(response);
+			}else{
+				reject(response.data.error);
+			}
+		});
+		
+	});
+};
+
 //Save Order
 export const SaveOrder = ( postedData ) => {
 	return new Promise( (resolve , reject) => {
 		apiClient.post('save-order' , { data : postedData}).then((response) => {
-			console.log(response)
 			if(response.data.status == true){
 				resolve(response);
 			}else{

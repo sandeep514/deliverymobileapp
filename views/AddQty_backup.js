@@ -51,6 +51,7 @@ export default function AddQty_backup({navigation}) {
 
 	useEffect(() => {
 		selectedLoadedItemsByQty();
+		return () => { setUpdatedDataArray = [] }
 	} , [])
 
 	function selectedLoadedItemsByQty() {
@@ -63,7 +64,6 @@ export default function AddQty_backup({navigation}) {
 				for(var i = 0 ; i < myNewDataFromApi.length ; i++){
 					valuetem[ Object.keys(myNewDataFromApi[i])+'_'+Object.values(myNewDataFromApi[i])[0].id ] = Object.values(myNewDataFromApi[i])[0].order_qty;
 					setValueData(valuetem);
-					console.log(valuetem)
 				} 
 				// setValueData(valuetem) 
 
@@ -86,7 +86,6 @@ export default function AddQty_backup({navigation}) {
 
 	function getUpdatedData(){
 		AsyncStorage.getItem('selectedLoadedItemsByQty').then((data) => {
-			console.log("jik")
 			getCartItemDetails(data).then((res) => {
 				myNewDataFromApi = res.data.data;
 			});
@@ -107,7 +106,6 @@ export default function AddQty_backup({navigation}) {
 				}
 			}
 			resolve(Object.values(processedData))
-			// console.log(data)
 		})
 	}
 	function SaveOrders(){
@@ -118,10 +116,8 @@ export default function AddQty_backup({navigation}) {
 	
 			data.push(res)
 			data.push({'type' : creaditStatus});
-			console.log(data)
 			SaveOrder(JSON.stringify(data)).then((res) => {
 				setSaveOrderActivIndictor(false)
-				console.log(res)
 				AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
 				AsyncStorage.setItem('orderSaveBuyer', JSON.stringify(res.data.buyer));
 				navigation.navigate('PDFmanager');
@@ -156,12 +152,10 @@ export default function AddQty_backup({navigation}) {
 		AsyncStorage.getItem('selectedLoadedItemsByQty').then((res) => {
 			let objectData = JSON.parse(res);
 			if( dnum+'__'+itemId in objectData){
-				console.log("hjik")
 				objectData[dnum+'__'+itemId]['value'] = qty;
 				AsyncStorage.setItem('selectedLoadedItemsByQty' ,JSON.stringify(objectData));
 			}
 			AsyncStorage.getItem('selectedLoadedItemsByQty').then((res) => {
-				console.log(res)
 			});
 		});
 		if( qty != '' ){
@@ -180,18 +174,15 @@ export default function AddQty_backup({navigation}) {
 		// ref_input2.current.focus()
 		// AsyncStorage.getItem('selectedLoadedItemsByQty').then((res) => {
 		// 	let objectData = JSON.parse(res);
-		// 	console.log("jnkkk");
 
 		// 		if( dnum+'__'+itemId in objectData){
 
 		// 			objectData[dnum+'__'+itemId]['value'] = qty;
-		// 			console.log("jnkk");
 		// 			// setData(data);
 		// 			AsyncStorage.setItem('selectedLoadedItemsByQty' ,JSON.stringify(objectData));
 		// 			AsyncStorage.getItem('selectedLoadedItemsByQty').then((data) => {
 		// 				setLoadedData(JSON.parse(data));
 		// 				getCartItemDetails(data).then((res) => {
-		// 					console.log("jnk");
 		// 					setData(res.data.data);
 		// 				});
 		// 			})
@@ -298,7 +289,6 @@ export default function AddQty_backup({navigation}) {
 																	myNewData[Object.keys(valueData)[i] ] = Object.values(valueData)[i];
 																}
 																setValueData(myNewData)
-																console.log(myNewData)
 															}
 
 														 } }/>

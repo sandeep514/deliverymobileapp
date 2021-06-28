@@ -17,7 +17,12 @@ import ItemsScreenWithQty from '../views/ItemsScreenWithQTY';
 import AddQuantity from '../views/AddQuantity';
 import PDFmanager from '../views/PDFmanager';
 import AllInvoice from '../views/AllInvoice';
+import Todayinvoices from '../views/Todayinvoices';
+
 import { View, Text, Button, Image } from 'react-native';
+import { Alert } from 'react-native';
+import { Icon } from 'react-native-elements';
+import { Pressable } from 'react-native';
 
 const Stack = createStackNavigator();
 
@@ -25,7 +30,7 @@ export default function Nav() {
 	return (
 		<NavigationContainer theme={DarkTheme}>
 			<Stack.Navigator
-				initialRouteName="LoginScreen"
+				initialRouteName="Todayinvoices"
 				allowFontScaling={false}
 				screenOptions={{
 				headerStyle: {
@@ -64,6 +69,11 @@ export default function Nav() {
 					component={AllInvoice}
 					options={{title: 'List Invoices'}}
 				/>
+				<Stack.Screen
+					name="Todayinvoices"
+					component={Todayinvoices}
+					options={{title: 'Today invoice'}}
+				/>
 
 				<Stack.Screen
 					name="loads"
@@ -77,12 +87,18 @@ export default function Nav() {
 					component={Dashboard}
 					options={({navigation}) => ({title: 'Dashboard', 
 						headerRight: () => (
-							<Button
-								onPress={() => navigation.navigate('AllInvoice') }
-								title="All Invoices"
-								color={Colors.primary}
-								buttonStyle={{marginRight: 100}}
-							/>
+							<View style={{flexDirection: 'row'}}>
+								<Pressable style={{backgroundColor: 'lightgreen' , padding: 8,borderRadius: 5,marginVertical: 10,marginRight: 5}} onPress={() => {
+									navigation.navigate('Todayinvoices')
+								}}>
+									<Text style={{color: '#000'}}>Today's</Text>
+								</Pressable>
+								<Pressable onPress={() => {
+									navigation.navigate('AllInvoice');
+								}} style={{backgroundColor: Colors.primary , padding: 8,borderRadius: 5,marginVertical: 10}} >
+									<Text style={{color: 'white'}}>All Invoices</Text>
+								</Pressable>
+							</View>
 						),
 					})}
 				/>
@@ -127,7 +143,14 @@ export default function Nav() {
 					title="PDF manager"
 					name="PDFmanager"
 					component={PDFmanager}
-					options={{headerShown: true , title : 'Invoice'}}
+					options={( {navigation} ) => ({
+						headerShown: true , title : 'Invoice',
+						headerLeft: () => (
+							<Pressable onPress={() => { navigation.navigate('Dashboard')}}>
+								<Icon name="home" color={Colors.primary} style={{marginLeft: 10,padding: 10}} />
+							</Pressable>
+						),
+					})}
 				/>
 			</Stack.Navigator>
 		</NavigationContainer>

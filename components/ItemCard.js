@@ -11,14 +11,20 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 	const [ UpdateQtyofItem , setUpdateQtyofItem] = useState({});
 	const [ UpdateQtyofItems , setUpdateQtyofItems] = useState(0);
 	const win = Dimensions.get('window');
-
-	// useEffect(() => {
-	// } , [])
+	
+	useEffect(() => {
+		AsyncStorage.getItem('undeliveredItems').then((items) => {
+			console.log(items)
+		})
+		return() => { selectedLoadArray = {}; AsyncStorage.setItem('selectedLoadedItemsByQty', JSON.stringify({})); }
+		// AsyncStorage.setItem('selectedLoadedItemsByQty', JSON.stringify({}));
+	},[])
+	
 	function DirectUpdateQTY(loadName , cardId ,qty){
-		selectedLoadArray[loadName+'__'+cardId] = {'value' : qty ,'cardId' : cardId};
+		selectedLoadArray[loadName+'__'+cardId] = {'value' : qty ,'cardId' : cardId,'VATstatus': false};
 		setUpdateQtyofItem(selectedLoadArray)
-
-			setUpdateQtyofItems((qty));
+		
+		setUpdateQtyofItems((qty));
 		AsyncStorage.setItem('selectedLoadedItemsByQty' , JSON.stringify(selectedLoadArray));
 	}
 	function addQtyItem(loadName , cardId){
@@ -28,7 +34,7 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 			selectedLoadArray[loadedName].value = (selectedLoadArray[loadedName].value+1);
 			setUpdateQtyofItem(selectedLoadArray)
 		}else{
-			selectedLoadArray[loadName+'__'+cardId] = {'value' : 1 ,'cardId' : cardId};
+			selectedLoadArray[loadName+'__'+cardId] = {'value' : 1 ,'cardId' : cardId,'VATstatus': false};
 			setUpdateQtyofItem(selectedLoadArray)
 		}
 
@@ -37,8 +43,13 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 		}else{
 			setUpdateQtyofItems((UpdateQtyofItems+1));
 		}
-		
+
 		AsyncStorage.setItem('selectedLoadedItemsByQty' , JSON.stringify(selectedLoadArray));
+
+		// AsyncStorage.getItem('selectedLoadedItemsByQty', (res) => {
+		// 	console.log(res)
+		// });
+
 	}
 	function minusQtyItem(loadName , cardId){
 		let loadedName = loadName+'__'+cardId;
@@ -73,9 +84,10 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 	return (
 		(qty == 'true') ?
 			<View>
+
 				<View style={[(win.width > 550) ? styles.cardBackgroundtab : styles.cardBackground, {backgroundColor: backgroundColor} , styleData]}>
 					<View style={styles.itemImageContainer}>
-						<Image source={{uri:imageUrl}} style={styles.itemImage} />
+						<Image source={{uri:imageUrl}} style={(win.width > 550) ? styles.itemImageTab : styles.itemImage} />
 						<Text style={styles.cardName ,{height: 'auto',fontSize: 12,marginTop: 6,marginBottom: 6}} allowFontScaling={false}>
 							{ ((cardName).length > 15) ? 
 								(((cardName).substring(0,15-3)) + '...') : 
@@ -83,18 +95,18 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 						</Text>
 					</View>
 					<View style={{flex:1 ,flexDirection: 'row', backgroundColor: '#ebedf087',width: '100%' }} >
-						<View >
-							<Pressable onPress={ () => { minusQtyItem( loadName , cardId ) } } style={{backgroundColor: 'red',padding: 8}}>
-								<Icon name='minus' type='font-awesome' style={{fontSize: 25,color: 'white', textAlign: 'center'}} />
+						<View  style={ (win.width > 550) ? {width: '20%'} : {width: '20%'} }>
+							<Pressable onPress={ () => { minusQtyItem( loadName , cardId ) } } style={{backgroundColor: 'red',padding:8, height: 50}}>
+								<Icon name='minus' type='font-awesome' style={(win.width > 500) ? {fontSize: 20,color: 'white', textAlign: 'center'} : {fontSize: 12,color: 'white', textAlign: 'center'}} />
 							</Pressable>
 							{/* <Button title="clickme" onPress={() => {clickme()}}></Button> */}
 						</View>
-						<View style={ (win.width > 550) ? {width: '55%'} : {width: 87} }>
+						<View style={ (win.width > 550) ? {width: '60%'} : {width: '60%'} }>
 							<TextInput keyboardType="numeric"  value={ (UpdateQtyofItems != undefined) ? UpdateQtyofItems.toString() : 0} key={cardId} placeholder="Qty" style={{textAlign: 'center',color: '#000'}} onChange={(value) => { (value.nativeEvent.text != '') ? DirectUpdateQTY( loadName , cardId , parseInt(value.nativeEvent.text)) : '' }} />
 						</View>
-						<View style={{}}>
-							<Pressable onPress={ () => { addQtyItem( loadName , cardId ) } } style={{backgroundColor: Colors.primary,padding: 8}}>
-								<Icon name='plus' type='font-awesome' style={{fontSize: 25,color: 'white', textAlign: 'center'}} />
+						<View  style={ (win.width > 550) ? {width: '20%'} : {width: '20%'} }>
+							<Pressable onPress={ () => { addQtyItem( loadName , cardId ) } } style={{backgroundColor: Colors.primary,padding:7, height: 50}}>
+								<Icon name='plus' type='font-awesome' style={(win.width > 500) ? {fontSize: 20,color: 'white', textAlign: 'center'} : {fontSize: 12,color: 'white', textAlign: 'center'}} />
 							</Pressable>
 						</View>
 					</View>
@@ -103,13 +115,13 @@ export default DashboardCard = ({ backgroundColor, cardName, imageUrl, onPress, 
 		: 
 			<Pressable onPress={onPress} style={[(win.width > 550) ? styles.cardBackgroundtab : styles.cardBackground, {backgroundColor: backgroundColor} , styleData]}>
 				<View style={styles.itemImageContainer}>
-					<Image source={{uri:imageUrl}} style={styles.itemImage} />
+					<Image source={{uri:imageUrl}} style={(win.width > 550) ? styles.itemImageTab : styles.itemImage} />
 				</View>
 
 				<View style={styles.cardFooterBackground}>
 					<Text style={styles.cardName} allowFontScaling={false}>
-						{ ((cardName).length > 20) ? 
-							(((cardName).substring(0,20-3)) + '...') : 
+						{ ((cardName).length > 15) ? 
+							(((cardName).substring(0,15-3)) + '...') : 
 							cardName }</Text>
 				</View>
 			</Pressable>
@@ -121,7 +133,7 @@ const styles = StyleSheet.create({
 	cardName: {
 		color: Colors.dark,
 		fontWeight: 'bold',
-		fontSize: heightToDp('1.7%'),		
+		fontSize: 12,		
 	},
 	cardFooterBackground: {
 		backgroundColor: '#ebedf087',
@@ -148,31 +160,37 @@ const styles = StyleSheet.create({
 		borderRadius: 100,
 	},
 	cardBackgroundtab: {
-		width: widthToDp('20%'),
+		width: widthToDp('18%'),
 		height: heightToDp('12%'),
 		borderRadius: 8,
 		marginTop: 15,
 		marginHorizontal: 5,
 		alignItems: 'center',
-		elevation: 10,
+		elevation: 2,
 		overflow: 'hidden',
-		height: 310
+		height: 200
 	},
 	cardBackground: {
-		width: widthToDp('40%'),
-		height: heightToDp('23%'),
+		width: widthToDp('30%'),
+		height: heightToDp('22%'),
 		borderRadius: 8,
 		marginTop: 15,
 		marginHorizontal: 5,
 		alignItems: 'center',
-		elevation: 10,
+		elevation: 2,
 		overflow: 'hidden',
-		height: 225
+		height: 150
 	},
 	itemImage: {
 		// flex: 1,
-		height: heightToDp('19.7%'),
-		width: widthToDp('40%'),
+		height: heightToDp('10.7%'),
+		width: widthToDp('20%'),
+		// resizeMode: 'contain',
+	},
+	itemImageTab: {
+		// flex: 1,
+		height: heightToDp('10.7%'),
+		width: widthToDp('18%'),
 		// resizeMode: 'contain',
 	},
 	itemImageContainer: {
