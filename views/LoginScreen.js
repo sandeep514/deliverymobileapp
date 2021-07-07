@@ -41,7 +41,8 @@ export default function LoginScreen({navigation}) {
 			AsyncStorage.setItem('user_licenseno', response.licenseno);
 			AsyncStorage.setItem('user_name', response.name);
 			AsyncStorage.setItem('user_username', response.username);
-
+			AsyncStorage.setItem('printerName', response.printerName);
+			
 			navigation.navigate('Vehicle');			
 		} , (err) => {
 			setIsLoaderActive(false);
@@ -71,7 +72,7 @@ export default function LoginScreen({navigation}) {
 						<KeyboardAwareScrollView>
 							<Image source={require('../assets/images/login.png')} style={styles.logo} />
 							<Formik
-								initialValues={{username: 'Vin', password: 'test'}}
+								initialValues={{username: 'vin', password: 'test'}}
 								onSubmit={(values) => formSubmitData(values)}>
 							{({handleChange, handleBlur, handleSubmit, values}) => (
 								<View style={{width: '100%'}}>

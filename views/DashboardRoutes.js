@@ -29,7 +29,10 @@ const list = [
         })
         const [listRoutes , setListRoutes] = useState();
         const [hasRoutes , setHasRoutes] = useState(false);
+
         useEffect(() => {
+            AsyncStorage.removeItem('cartItems')
+            AsyncStorage.removeItem('itemsAddedInCart')
             AsyncStorage.setItem('selectedLoadedItemsByQty',JSON.stringify({}));
             getRoutes()
             AsyncStorage.getItem('location').then( (data) => {
@@ -40,6 +43,8 @@ const list = [
                             longitudeDelta: 1
                         })
             })
+
+            return ( AsyncStorage.removeItem('selectedInvoiceId'))
         } , [])
 
         function getRoutes(){

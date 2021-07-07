@@ -11,7 +11,7 @@ import {
   Text
 } from 'react-native';
 import {ListItem} from 'react-native-elements';
-import { getVehicleLoads } from '../api/apiService';
+import { getVehicleLoads, updateDriverForsale } from '../api/apiService';
 import MainScreen from '../layout/MainScreen';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Colors } from '../components/Colors';
@@ -36,6 +36,16 @@ export default function LoadsScreen({navigation , route}) {
 			setActiveIndicatorLoader(false)
 			showToast(err);
 		});
+
+		// updateDriverForsale
+		AsyncStorage.getItem('selectedVehicleNo').then((vehicheId) => {
+			AsyncStorage.getItem('user_id').then((driverId) => {
+                AsyncStorage.getItem('selectedRoute').then((route) => {
+                    updateDriverForsale({"routeId": route,"driverId": driverId,"vehicleId": vehicheId})
+                });
+            });
+        });
+
 	}, []);
 
 	function addLoadsToArray (LoadMumber) {

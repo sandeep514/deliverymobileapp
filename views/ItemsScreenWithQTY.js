@@ -18,16 +18,43 @@ export default function ItemsScreenWithQty({navigation}) {
 	const [activeIndicatorLoader , setActiveIndicatorLoader] = useState(true);
 	const [ListItems , setListItems] = useState();
 	const [requestSent , setRequestSent] = useState(false);
-	const [hasUndeliveredItems , setHasUndeliveredItems] = useState(true);
+	const [hasUndeliveredItems , setHasUndeliveredItems] = useState(false);
 	// const [listUndelivered , setListUndelivered] = useState();
 
 	
 	useEffect(() => {
-		let undeliveredItems = {"LOAD-20-03-2021-246__134":{"value":5,"cardId":134,"VATstatus":false},"LOAD-20-03-2021-246__311":{"value":6,"cardId":311,"VATstatus":false}};
+		AsyncStorage.getItem('cartItems').then((data) => {
+			console.log("here")
+			console.log(data)
+			console.log("here")
+		// 	let myRecords = {};
+		// 	let myRecordsFinal = {};
+		// 	let relData = JSON.parse(data);
+		// 	if( data != undefined ){
+		// 		for(let i = 0 ; i < relData.length; i++){
+
+		// 			let dnum = relData[i].dnum;
+		// 			let sitem = relData[i].sitem;
+		// 			let qty = relData[i].qty;
+
+		// 			myRecords[relData[i].dnum+'_'+relData[i].sitem] = qty;
+		// 			myRecordsFinal[relData[i].dnum+'__'+relData[i].sitem] = {'value' : JSON.parse(qty) , 'cardId' :relData[i].sitem,'VATstatus': false };
+		// 			AsyncStorage.setItem('selectedLoadedItemsByQty' , JSON.stringify(myRecordsFinal))
+		// 			AsyncStorage.setItem('itemsAddedInCart' , JSON.stringify(myRecords))
+		// 		}
+		// 	}
+		})
+		AsyncStorage.getItem('user_id').then((userId) => {
+			if( userId != 13 && userId != '13'){
+				// setHasUndeliveredItems(true);
+				// let undeliveredItems = {"LOAD-20-03-2021-246__134":{"value":5,"cardId":134,"VATstatus":false},"LOAD-20-03-2021-246__311":{"value":6,"cardId":311,"VATstatus":false}};
+				// AsyncStorage.setItem('undeliveredItems' , JSON.stringify(undeliveredItems));
+			}
+		});
+		
 		// setListUndelivered(undeliveredItems)
 		
 		AsyncStorage.setItem('selectedLoadedItemsByQty',JSON.stringify({}));
-		AsyncStorage.setItem('undeliveredItems' , JSON.stringify(undeliveredItems));
 
 		AsyncStorage.getItem('selectedBuyerRouteId').then((buyerId) => {
 			checkIfBuyerHasVAT(buyerId).then((res) => {
@@ -61,7 +88,7 @@ export default function ItemsScreenWithQty({navigation}) {
 	return (
 		<MainScreen>
 			<ScrollView vertical="true" >
-				<Modal
+				{/* <Modal
 						animationType="slide"
 						transparent={true}
 						visible={hasUndeliveredItems}
@@ -88,7 +115,7 @@ export default function ItemsScreenWithQty({navigation}) {
 								</View>
 							</View>
 						</View>
-					</Modal>
+					</Modal> */}
 				{(activeIndicatorLoader == true) ? 
 					<ActivityIndicator size="large" color="#6c33a1" />
 				:
@@ -127,7 +154,6 @@ export default function ItemsScreenWithQty({navigation}) {
 							// AsyncStorage.getItem('UndeliveredItemsInCart').then((res) => {
 							// 	if( res =='yes' ){
 							// 		AsyncStorage.getItem('undeliveredItems').then((undeliveredItems) => {
-							// 			console.log(undeliveredItems)
 							// 		})
 							// 	}
 							// })

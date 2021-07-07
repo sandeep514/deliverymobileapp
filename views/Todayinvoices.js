@@ -43,6 +43,7 @@ export default function Todayinvoices({navigation}) {
 	const [loadedData , setLoadedData] = useState();
 	const [updatedData , setUpdatedData] = useState();
 	const [creditData , setCreditData] = useState();
+	const [undeliveredData , setUndeliveredData] = useState();
 	const [loadedActivityIndicator , setLoadedActivityIndicator] = useState(false);
 	const [printingIndicator , setPrintingIndicator] = useState(false);
 	const [ActInd , setActInd] = useState(false);
@@ -86,12 +87,15 @@ export default function Todayinvoices({navigation}) {
 	// 	});
     // }
 
-    function getPendingSale (){
+     function getPendingSale ({"route":route,"driver":driverId,"vehicle":vehicheId}){
         return new Promise((resolve , reject) => {
-            getPendingSales().then((res) => {
-                setCreditData(res.data.data)
-                showModel(false);
+            getPendingSales({"route":route,"driver":driverId,"vehicle":vehicheId}).then((res) => {
+                setCreditData(res.data.deliverdSales)
+                setUndeliveredData(res.data.nonDeliverdSales)
+                setActInd(false)
+                showModel(false)
             } , (err) => {
+                showToast('no records available')
             });
         })
     }
@@ -397,7 +401,16 @@ export default function Todayinvoices({navigation}) {
 
         setPrintingIndicator(false);
     }
-
+    function gotoCart(invoiceNo, selectedBuyer) {
+        setActInd(true)
+        getSaleItemByInvoice(invoiceNo).then((data) => {
+            setActInd(false)
+            AsyncStorage.setItem('cartItems' , JSON.stringify(data.data.data));
+            AsyncStorage.setItem('selectedInvoiceId' , invoiceNo);
+            AsyncStorage.setItem('selectedBuyer' , (selectedBuyer).toString());
+            navigation.push('ItemsScreenWithQty');
+        })
+    }
     function searchBuyer(text){
         // setActInd(true)
         searchBuyerByInvoiceNumber(text).then((res) => {
@@ -425,6 +438,7 @@ export default function Todayinvoices({navigation}) {
         updatePaymentStatus(invoice , status).then((res) => {
             getlist();
         } , (err) => {
+            
             showModel(false);
         })
     }
@@ -483,6 +497,14 @@ export default function Todayinvoices({navigation}) {
                         
                         <ScrollView vertical='true'>
                             {(creditData != undefined && creditData != null) ?
+                                <View>
+                                    <Text style={{ marginLeft:15,fontSize: 16,fontWeight: 'bold',color: Colors.primary }}>Pending Payments</Text>
+                                </View>
+                            :
+                                <View></View>
+                            }
+                            {(creditData != undefined && creditData != null) ?
+                                
                                 Object.values(creditData).map((l, i) => (
                                     (l != null)?
                                     <TouchableHighlight key={i}>
@@ -506,7 +528,7 @@ export default function Todayinvoices({navigation}) {
                                                     <View style={{backgroundColor: 'white',zIndex: 99999,elevation: 5,padding: 10,borderRadius: 5,flexDirection: 'row',justifyContent: 'space-between',width: 150}}>
                                                         <Pressable onPress={ () => { showModels( l[0].invoice_no , 'cash' ) }}><Text >Cash</Text></Pressable>
                                                         <Text style={{borderRightColor: '#ededed',borderRightWidth: 1}}></Text>
-                                                        <Pressable onPress={ () => { showModels( l[0].invoice_no , 'bank' ) }}><Text>Bank Transfer</Text></Pressable>
+                                                        <Pressable onPress={ () => { showModels( l[0].invoice_no , 'bank_transfer' ) }}><Text>Bank Transfer</Text></Pressable>
                                                     </View>
                                                 :
                                                     <View></View>
@@ -520,6 +542,45 @@ export default function Todayinvoices({navigation}) {
                             : 
                                 <View>
                                     <ActivityIndicator size="large" color={Colors.primary} />
+                                </View>
+                            }
+
+                            {(undeliveredData != undefined && undeliveredData != null) ?
+                                <View>
+                                    <Text style={{ marginLeft:15,fontSize: 16,fontWeight: 'bold',color: Colors.primary }}>Pending Deliveries</Text>
+                                </View>
+                            :
+                                <View></View>
+                            }
+
+                            {(undeliveredData != undefined && undeliveredData != null) ?
+                                Object.values(undeliveredData).map((l, i) => (
+                                    (l != null)?
+                                        <TouchableHighlight key={i}>
+                                            <ListItem bottomDivider key={i} >
+                                                <ListItem.Content key={i} >
+                                                    <ListItem.Title key={i} style={{fontSize: 14}} allowFontScaling={false}>
+                                                        {l[0]["buyer_rel"].name}
+                                                    </ListItem.Title>
+                                                    <ListItem.Subtitle allowFontScaling={false} >
+                                                        <Text style={{fontSize: 10}}>{l[0].dnum}</Text>
+                                                    </ListItem.Subtitle>
+                                                </ListItem.Content>
+                                                <View style={{ flexDirection: 'column' }}>
+                                                    <View style={{  }}>
+                                                        <Pressable style={{textAlign: 'center',justifyContent: 'center',width: 80,backgroundColor: Colors.primary,paddingHorizontal: 12,paddingVertical: 2,borderRadius: 5}} onPress={() => { gotoCart( l[0].invoice_no ,l[0]["buyer_rel"].id ) }} >
+                                                            <Text style={{color: 'white',textAlign: 'center'}}>Cart</Text>
+                                                        </Pressable>
+                                                    </View>
+                                                </View>
+                                            </ListItem>
+                                        </TouchableHighlight>
+                                    :
+                                        <View></View>
+                                ))
+                            : 
+                                <View>
+                                    {/* <ActivityIndicator size="large" color={Colors.primary} /> */}
                                 </View>
                             }
                         </ScrollView>

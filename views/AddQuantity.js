@@ -79,6 +79,7 @@
 					totalAmountVatWithout = 0;
 					totalAmountVat = 0;
 					setUpdatedDataArray = [];
+					setSaveOrderActivIndictor(false)
 			}
 		} , [])
 		
@@ -179,26 +180,23 @@
 		}
 
 		function SaveOrders(){	
-			setModalVisible(!modalVisible)		
+			// setModalVisible(!modalVisible)		
 			if( IsKeyboardOpen){
 				Keyboard.dismiss();
 			}else{
-				setSaveOrderActivIndictor(true)
+				// setSaveOrderActivIndictor(true)
 				AsyncStorage.setItem('finalItems' , JSON.stringify(setUpdatedDataArray));
-				
+				console.log('+++++++++++++++++')
+				console.log(JSON.stringify(setUpdatedDataArray))
+				console.log('+++++++++++++++++')
 				updateRecords(setUpdatedDataArray).then((res) => {
 					let data = [];
 					data.push(res)
 					data.push({'type' : creaditStatus});
 					AsyncStorage.getItem('currentVATstatus').then((VATstatus) => {
-						data.push({'has_vat' : parseInt(VATstatus)});
-						SaveOrder(JSON.stringify(data)).then((res) => {
-							setSaveOrderActivIndictor(false)
-							AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
-							AsyncStorage.setItem('orderSaveBuyer', JSON.stringify(res.data.buyer));
-							showToast('Order has been placed successfully')
-							navigation.navigate('PDFmanager');
-						})
+						// data.push({'has_vat' : parseInt(VATstatus)});
+						AsyncStorage.setItem('readyForOrder' , JSON.stringify(data));
+						navigation.navigate('PDFmanager');
 					})
 	
 				})
@@ -554,7 +552,7 @@
 								<Text style={{textAlign: 'center'}}><ActivityIndicator size="large" color="white"></ActivityIndicator></Text>
 							</View>
 						:
-							<Pressable style={{padding: 16,backgroundColor:Colors.primary,flexDirection: 'row',justifyContent: 'center'}}><Text style={{textAlign: 'center',color: 'white',fontSize: 20}} onPress={() => { showConfirmationModel() }}> Place order and print invoice £{(parseFloat(MyTotalPrice) ).toFixed(2)} </Text>
+							<Pressable style={{padding: 16,backgroundColor:Colors.primary,flexDirection: 'row',justifyContent: 'center'}}><Text style={{textAlign: 'center',color: 'white',fontSize: 20}} onPress={() => { SaveOrders() }}> Place order and print invoice £{(parseFloat(MyTotalPrice) ).toFixed(2)} </Text>
 							</Pressable>
 						}
 						{/* {setTotalAmount} */}
