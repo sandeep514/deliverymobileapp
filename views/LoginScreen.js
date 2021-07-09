@@ -72,7 +72,7 @@ export default function LoginScreen({navigation}) {
 						<KeyboardAwareScrollView>
 							<Image source={require('../assets/images/login.png')} style={styles.logo} />
 							<Formik
-								initialValues={{username: 'vin', password: 'test'}}
+								initialValues={{username: 'vin', password: '12345678'}}
 								onSubmit={(values) => formSubmitData(values)}>
 							{({handleChange, handleBlur, handleSubmit, values}) => (
 								<View style={{width: '100%'}}>

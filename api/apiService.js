@@ -14,6 +14,7 @@ export const  generateRandString = () => {
 export const checkLogin = ( postedData ) => {
 	return new Promise( (resolve , reject) => {
 		apiClient.post('driver-login' , { username : postedData.username , password : postedData.password}).then((response) => {
+			console.log(response);
 			if(response.data.status == true){
 				resolve(response);
 			}else{
@@ -42,6 +43,18 @@ export const getRoutes = () => {
 		apiClient.get('get-all-routes').then((res) => {
 			if( res.data.status == true){
 				resolve(res.data.data)
+			}else{
+				reject('No routes available');
+			}
+		})
+	})
+}
+
+export const getDiverId = (driverId) => {
+	return new Promise( (resolve , reject) => {
+		apiClient.get('get-printer-device/'+driverId).then((res) => {
+			if( res.data.status == true){
+				resolve(res.data.printerName)
 			}else{
 				reject('No routes available');
 			}

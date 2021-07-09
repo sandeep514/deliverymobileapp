@@ -15,7 +15,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import {ListItem, Avatar, Header, Button, Input} from 'react-native-elements';
 import MainScreen from '../layout/MainScreen';
 import {useState, useEffect} from 'react';
-import {generateRandString, getCartItemDetails, getListInvoices, getVehicle, imagePrefix} from '../api/apiService';
+import {generateRandString, getCartItemDetails, getDiverId, getListInvoices, getVehicle, imagePrefix} from '../api/apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {searchBuyerByInvoiceNumber, getSaleItemByInvoice} from '../api/apiService';
 import { ActivityIndicator } from 'react-native';
@@ -35,6 +35,7 @@ let selectedBuyerId = '';
 let valuetem = '';
 let updatedValue= '';
 let initalPaymentStatus = 'cash';
+let unableToConnect = 0;
 
 export default function AddQuantity({navigation}) {
 const [data, setData] = useState();
@@ -49,62 +50,17 @@ const [saveOrderActivIndictor , setSaveOrderActivIndictor] = useState(false);
 const [selectedLoadCount , setSelectedLoadCount] = useState();
 const [ device ,setDevice ] = useState();
 const [ isBluetoothEnabled ,setisBluetoothEnabled ] = useState(false);
+const [ bluetoothName ,setBluetoothName ] = useState();
+const [ hasVatProduct ,setHasVatProducts ] = useState(false);
+const [ hasNonVatProducts ,setHasNonVatProducts ] = useState(false);
 
 const ref_input2 = useRef();
 var paired = [];
 
 useEffect(() => {
     getListInvoice();
-        BluetoothManager.isBluetoothEnabled().then( (enabled) => {
-        BluetoothManager.enableBluetooth().then( (r) => {
-            
-            setisBluetoothEnabled(true)
-            if (r != undefined) {
-                for (let i = 0; i < r.length; i++) {
-
-                    AsyncStorage.getItem('printerName').then((res) => {
-                        if(res != null && res != undefined){
-                            if(JSON.parse(r[i]).name == res){
-                                try {
-                                    paired.push(JSON.parse(r[i]).name);
-                                    setDevice(JSON.parse(r[i]).address)
-                                } catch (e) {
-                                    alert(e);
-                                }
-                            }
-                        }else{
-                            alert('No Printer available');
-                        }
-                    
-                    })
-                }
-            }else{
-                alert('No Device detected');
-            }
-            // var jsonPairedData = JSON.stringify(paired);
-            
-            
-            
-            // setDevice(paired[0].address)
-            // BluetoothManager.connect(paired[0].address).then(
-            //     printDesign(),
-            //     (err) => {
-            //         alert(err);
-            //     },
-            //     (e) => {
-            //         alert(e);
-            //     },
-            // );
-        },
-        (err) => {
-            alert(err);
-        },
-        );
-    },
-    (err) => {
-        alert(err);
-    },
-    );
+    getPrinterNameByDriver()
+     
 
 } , [])
 
@@ -136,24 +92,119 @@ printReceipt = (data) => {
     let buyerAddress = data[0]['buyer_rel'].address;
     let buyerPhone = data[0]['buyer_rel'].contact_no;
     let invoiceNo = data[0].invoice_no;
-    
-    getSaleItemByInv(invoiceNo).then((res) => {
-        if( device != undefined ){
-            BluetoothManager.connect(device).then( (ress) => {
-                printDesign( Object.values(res) , invoiceNo , buyerName ,buyerAddress , buyerPhone );
-            },(e) => {
-                alert(e);
-                setPrintingIndicator(false);
-            });
-        }else{
-            alert('printer not connected');
-            setPrintingIndicator(false);
-        }
-    },(error) => {
-        alert(error);
-    });
+      AsyncStorage.getItem('user_id').then((res) => {
+            getDiverId(res).then((printerName) => {
+                setBluetoothName(printerName)
+                BluetoothManager.isBluetoothEnabled().then( (enabled) => {
+                    BluetoothManager.enableBluetooth().then( (r) => {
+                        
+                        setisBluetoothEnabled(true)
+                        if (r != undefined) {
+                            for (let i = 0; i < r.length; i++) {
+
+                                // AsyncStorage.getItem('printerName').then((res) => {
+                                    if(res != null && res != undefined){
+                                        if(JSON.parse(r[i]).name == printerName){
+                                            paired.push(JSON.parse(r[i]).name);
+                                            setDevice(JSON.parse(r[i]).address)
+
+                                            getSaleItemByInv(invoiceNo).then((res) => {
+                                                for(let i = 0 ; i < res.length ; i++){
+                                                    if( res[i]['sale_item_rel'].itemcategory == 'EGGS' || res[i].has_vat ){
+                                                        setHasVatProducts(true)
+                                                    }
+                                                    if( res[i]['sale_item_rel'].itemcategory != 'EGGS' && !res[i].has_vat ){
+                                                        setHasNonVatProducts(true)
+
+                                                    }
+                                                    
+                                                }
+                                                BluetoothManager.connect(JSON.parse(r[i]).address).then( (ress) => {
+                                                    printDesign( Object.values(res) , invoiceNo , buyerName ,buyerAddress , buyerPhone );
+                                                },(e) => {
+                                                    if( e == 'Unable to connect device'){
+                                                        console.log("here")
+                                                    }
+                                                    console.log(e['Error']);
+                                                    alert(e)
+                                                    setPrintingIndicator(false);
+                                                });
+                                            },(error) => {
+                                                alert(error);
+                                            });
+                                        }
+                                    }else{
+                                        alert('No Printer available');
+                                    }
+                                
+                                // })
+                            }
+                        }else{
+                            alert('No Device detected');
+                        }
+                
+                    },(err) => {
+                        alert(err);
+                    });
+                },
+                    (err) => {
+                        alert(err);
+                    },
+                );
+            })
+        })
+      
 };
+getPrinterNameByDriver = () => {
+    return new Promise((resolve, reject) => {
+        AsyncStorage.getItem('user_id').then((res) => {
+            getDiverId(res).then((printerName) => {
+                setBluetoothName(printerName)
+                BluetoothManager.isBluetoothEnabled().then( (enabled) => {
+                    BluetoothManager.enableBluetooth().then( (r) => {
+                        
+                        setisBluetoothEnabled(true)
+                        if (r != undefined) {
+                            for (let i = 0; i < r.length; i++) {
+
+                                // AsyncStorage.getItem('printerName').then((res) => {
+                                    if(res != null && res != undefined){
+                                        if(JSON.parse(r[i]).name == printerName){
+                                            try {
+                                                paired.push(JSON.parse(r[i]).name);
+                                                setDevice(JSON.parse(r[i]).address)
+                                                resolve(JSON.parse(r[i]).address);
+                                            } catch (e) {
+                                                alert(e);
+                                            }
+                                        }
+                                    }else{
+                                        alert('No Printer available');
+                                    }
+                                
+                                // })
+                            }
+                        }else{
+                            alert('No Device detected');
+                        }
+                
+                    },(err) => {
+                        alert(err);
+                    });
+                },
+                    (err) => {
+                        alert(err);
+                    },
+                );
+            })
+            resolve();
+        })
+    })
+    
+}
 printDesign = async (data , invoiceNo , buyerName, buyerAddress , buyerPhone) => {
+    // console.log(data[0]);
+    // return false;
     let totalAmount = 0;
 
     await BluetoothEscposPrinter.printerAlign(
@@ -269,138 +320,188 @@ printDesign = async (data , invoiceNo , buyerName, buyerAddress , buyerPhone) =>
         {},
     );
     await BluetoothEscposPrinter.printText('\n\r', {});
-    await BluetoothEscposPrinter.printerAlign(
-        BluetoothEscposPrinter.ALIGN.CENTER,
-    );
-    await BluetoothEscposPrinter.printText(
-        'Items without VAT',
-        {encoding: 'GBK',
-            codepage: 0,
-            widthtimes: 0,
-            heigthtimes: 0,
-            fonttype: 1
-        }
-    );
-    await BluetoothEscposPrinter.printText('\n\r', {});
-    await BluetoothEscposPrinter.printText('\n\r', {});
 
-    let columnWidthsHeaderPhone = [12,4,8,8];
-    await BluetoothEscposPrinter.printColumn(
-        columnWidthsHeaderPhone,
-            [
-                BluetoothEscposPrinter.ALIGN.LEFT,
-                BluetoothEscposPrinter.ALIGN.CENTER,
-                BluetoothEscposPrinter.ALIGN.CENTER,
-                BluetoothEscposPrinter.ALIGN.RIGHT,
-            ],
-            ['Items','Qty', 'Price','Amount'],
-        {},
-    );
-
-    await BluetoothEscposPrinter.printText(
-        '--------------------------------\n\r',
-        {},
-    );
-    let columnWidths = [12, 4, 8, 8];
+    if(hasVatProduct){
+        let columnWidthsHeaderPhone = [5,7,7,7,7];
+        await BluetoothEscposPrinter.printColumn(
+            columnWidthsHeaderPhone,
+                [
+                    BluetoothEscposPrinter.ALIGN.LEFT,
+                    BluetoothEscposPrinter.ALIGN.CENTER,
+                    BluetoothEscposPrinter.ALIGN.CENTER,
+                    BluetoothEscposPrinter.ALIGN.CENTER,
+                    BluetoothEscposPrinter.ALIGN.RIGHT,
+                ],
+                ['Qty', 'Price','Amount','VAT','Total'],
+            {},
+        );
+    
+        await BluetoothEscposPrinter.printText(
+            '--------------------------------\n\r',
+            {},
+        );
+        let vatAmount = 0;
+        let VatProductTotal = 0;
+        let beforeVatPrice = 0;
+        let columnWidths = [5,7,7,7,7];
+        let columnWidthsTotal = [8,2,8,8,7];
         for(let i = 0 ; i < data.length ; i++){
-            if( data[i]['sale_item_rel'].itemcategory == 'EGGS' ){
+            if( data[i]['sale_item_rel'].itemcategory == 'EGGS' || data[i].has_vat ){
                 let sitem       = data[i]['sale_item_rel']['name'];
                 let salePrice   = data[i]['sale_price'];
                 let qty         = data[i]['qty'];
-                let amount = ((data[i]['sale_price'] * data[i]['qty']).toFixed(2)).toString();
-
+                let vat = 0;
+                let amount = 0;
+                if( data[i]['sale_item_rel'].itemcategory != 'EGGS' ){
+                    vat = (( (( ( (data[i]['sale_price'] * data[i]['qty']) * 1.20 ) - (data[i]['sale_price'] * data[i]['qty']))) ).toFixed(2)).toString();
+    
+                    vatAmount = vatAmount + parseFloat(vat);
+                }
+                if( data[i]['sale_item_rel'].itemcategory == 'EGGS' ){
+                    amount = ((data[i]['sale_price'] * data[i]['qty']).toFixed(2)).toString();
+                }else{
+                    amount = (( (data[i]['sale_price'] * data[i]['qty']) * 1.20 ).toFixed(2)).toString();
+                    
+                }
+                beforeVatPrice = (beforeVatPrice + parseFloat((qty*salePrice)));
                 totalAmount = (parseFloat(totalAmount)+parseFloat(amount));
-
+    
+                await BluetoothEscposPrinter.printerAlign(
+                    BluetoothEscposPrinter.ALIGN.LEFT,
+                );
+                await BluetoothEscposPrinter.printText(
+                    sitem,
+                    {},
+                );
+                await BluetoothEscposPrinter.printText(
+                    '\n\r',
+                    {},
+                );
                 await BluetoothEscposPrinter.printColumn(
                     columnWidths,
                     [
                         BluetoothEscposPrinter.ALIGN.LEFT,
                         BluetoothEscposPrinter.ALIGN.LEFT,
                         BluetoothEscposPrinter.ALIGN.CENTER,
-                        BluetoothEscposPrinter.ALIGN.RIGHT,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
                     ],
-                    [sitem, qty, '$'+salePrice, '$'+amount],
+                    [(qty*1).toFixed(0), '$'+salePrice,'$'+(qty*salePrice).toFixed(2),'$'+vat, '$'+amount],
                 {});
-                await BluetoothEscposPrinter.printText('\n\r', {});
             }
         }
-    
-    await BluetoothEscposPrinter.printText('\n\r', {});
-    await BluetoothEscposPrinter.printerAlign(
-        BluetoothEscposPrinter.ALIGN.CENTER,
-        );
         await BluetoothEscposPrinter.printText(
-            '*************************',
-            {encoding: 'GBK',
-            codepage: 0,
-            widthtimes: 0,
-            heigthtimes: 0,
-            fonttype: 1
-        });
-        
-    await BluetoothEscposPrinter.printText('\n\r', {});
-    await BluetoothEscposPrinter.printText('\n\r', {});
-    await BluetoothEscposPrinter.printerAlign(
-        BluetoothEscposPrinter.ALIGN.CENTER,
-    );
-    await BluetoothEscposPrinter.printText(
-        'Items with VAT',
-        {encoding: 'GBK',
-            codepage: 0,
-            widthtimes: 0,
-            heigthtimes: 0,
-            fonttype: 1
-        }
-    );
-    await BluetoothEscposPrinter.printText('\n\r', {});
-    await BluetoothEscposPrinter.printText('\n\r', {});
-
-    let columnWidthsHeaderPhoneVat = [12,4,8,8];
-    await BluetoothEscposPrinter.printColumn(
-        columnWidthsHeaderPhoneVat,
+            '--------------------------------\n\r',
+            {},
+        );
+        await BluetoothEscposPrinter.printColumn(
+            columnWidthsTotal,
             [
                 BluetoothEscposPrinter.ALIGN.LEFT,
                 BluetoothEscposPrinter.ALIGN.CENTER,
                 BluetoothEscposPrinter.ALIGN.CENTER,
+                BluetoothEscposPrinter.ALIGN.CENTER,
                 BluetoothEscposPrinter.ALIGN.RIGHT,
             ],
-            ['Items','Qty', 'Price','Amount'],
-        {},
-    );
-
-    await BluetoothEscposPrinter.printText(
-        '--------------------------------\n\r',
-        {},
-    );
+            ["Total: ", '','$'+(beforeVatPrice).toFixed(2),'$'+(vatAmount).toFixed(2), '$'+(beforeVatPrice + vatAmount).toFixed(2)],
+        {});
+        await BluetoothEscposPrinter.printText(
+            '--------------------------------\n\r',
+            {},
+        );
+        await BluetoothEscposPrinter.printText('\n\r', {});
+    }
     let columnWidthsVat = [12, 4, 8, 8];
+    let nonVatTotal = 0;
+
+    if( hasNonVatProducts ){
+        await BluetoothEscposPrinter.printText('\n\r', {});
+        await BluetoothEscposPrinter.printerAlign(
+            BluetoothEscposPrinter.ALIGN.CENTER,
+            );
+            await BluetoothEscposPrinter.printText(
+                '*************************',
+                {encoding: 'GBK',
+                codepage: 0,
+                widthtimes: 0,
+                heigthtimes: 0,
+                fonttype: 1
+            });
+            
+        await BluetoothEscposPrinter.printText('\n\r', {});
+        await BluetoothEscposPrinter.printText('\n\r', {});
+
+        let columnWidthsHeaderPhoneVat = [10,10,10];
+        await BluetoothEscposPrinter.printColumn(
+            columnWidthsHeaderPhoneVat,
+                [
+                    BluetoothEscposPrinter.ALIGN.LEFT,
+                    BluetoothEscposPrinter.ALIGN.LEFT,
+                    BluetoothEscposPrinter.ALIGN.CENTER,
+                ],
+                ['Qty', 'Price','Amount'],
+            {},
+        );
+
+        await BluetoothEscposPrinter.printText(
+            '--------------------------------\n\r',
+            {},
+        );
+
         for(let i = 0 ; i < data.length ; i++){
-            if( data[i]['sale_item_rel'].itemcategory != 'EGGS' ){
-                let sitem       = data[i]['sale_item_rel']['name'];
-                let salePrice   = data[i]['sale_price'];
-                let qty         = data[i]['qty'];
-                let amount      = ((data[i]['sale_price'] * data[i]['qty']).toFixed(2)).toString();
+            if( data[i]['sale_item_rel'].itemcategory != 'EGGS' && !data[i].has_vat  ){
+                let sitem = data[i]['sale_item_rel']['name'];
+                let salePrice = data[i]['sale_price'];
+                let qty = data[i]['qty'];
+                let amount = ((data[i]['sale_price'] * data[i]['qty']).toFixed(2)).toString();
+                let vat = 0;
 
-                totalAmount = (parseFloat(totalAmount)+parseFloat(amount));
 
+                nonVatTotal = (nonVatTotal + parseFloat(amount));
+                await BluetoothEscposPrinter.printerAlign(
+                    BluetoothEscposPrinter.ALIGN.LEFT,
+                );
+                await BluetoothEscposPrinter.printText(
+                    sitem,
+                    {},
+                );
+                await BluetoothEscposPrinter.printText(
+                    '\n\r',
+                    {},
+                );
+
+                let columnWidthsVat = [10,10,10];
                 await BluetoothEscposPrinter.printColumn(
                     columnWidthsVat,
                     [
-                        BluetoothEscposPrinter.ALIGN.LEFT,
-                        BluetoothEscposPrinter.ALIGN.LEFT,
                         BluetoothEscposPrinter.ALIGN.CENTER,
-                        BluetoothEscposPrinter.ALIGN.RIGHT,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
                     ],
-                    [sitem, qty, '$'+salePrice, '$'+amount],
+                    [(qty*1).toFixed(0), '$'+salePrice,'$'+amount],
                 {});
                 await BluetoothEscposPrinter.printText('\n\r', {});
+                
             }
         }
-    
+                await BluetoothEscposPrinter.printerAlign(
+                    BluetoothEscposPrinter.ALIGN.RIGHT,
+                );
+                await BluetoothEscposPrinter.printText(
+                    'Total:'+(nonVatTotal).toFixed(2),{}
+                );
+                await BluetoothEscposPrinter.printText('\n\r', {});
 
-    await BluetoothEscposPrinter.printText(
-        '--------------------------------\n\r',
-        {},
-    );
+                await BluetoothEscposPrinter.printText(
+                    '--------------------------------\n\r',{}
+                );
+
+        await BluetoothEscposPrinter.printText(
+            '--------------------------------\n\r',
+            {},
+        );
+
+    }
     await BluetoothEscposPrinter.printColumn(
         columnWidthsVat,
         [
@@ -409,7 +510,7 @@ printDesign = async (data , invoiceNo , buyerName, buyerAddress , buyerPhone) =>
             BluetoothEscposPrinter.ALIGN.CENTER,
             BluetoothEscposPrinter.ALIGN.RIGHT,
         ],
-        ['', '', 'Total: ','$'+(totalAmount)],
+        ['', '', 'Total: ','$'+(totalAmount+nonVatTotal)],
         {
         },
     );

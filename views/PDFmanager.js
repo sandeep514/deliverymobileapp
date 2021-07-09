@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import Signature from 'react-native-signature-canvas';
 import SignatureScreen from 'react-native-signature-canvas';
 import { useRef } from 'react';
-import { BeforeOrderDetails, SaveOrder } from '../api/apiService';
+import { BeforeOrderDetails, getDiverId, SaveOrder } from '../api/apiService';
 import {Colors} from './../components/Colors';
 import {widthToDp, heightToDp} from '../utils/Responsive';
 import { BackHandler } from 'react-native';
@@ -43,20 +43,18 @@ export default function PDFmanager({navigation , text, onOK}) {
     const [WithoutVatProductTotal , setWithoutVatProductTotal] = useState(0);
     const [invoiceNumber , setInvoiceNumber] = useState();
     const [selectedDriverId , setselectedDriverId] = useState();
+    const [ bluetoothName ,setBluetoothName ] = useState();
 
 	let setBase64Image = '';
     
     useEffect(() => {
+        getPrinterNameByDriver();
         AsyncStorage.getItem('user_id').then((driverId) => {
             setselectedDriverId(driverId)
         });
         AsyncStorage.getItem('readyForOrder').then((data) => {
-            // console.log("+++++++++++++++++++++")
-            // console.log(data)
-            // console.log("+++++++++++++++++++++")
             BeforeOrderDetails(data).then( (result) => {
                 AsyncStorage.getItem('selectedInvoiceId').then((selectedInvoice) => {
-                    console.log(selectedInvoice)
                     if( selectedInvoice != null ){
                         setInvoiceNumber(selectedInvoice);
                     }else{
@@ -112,7 +110,6 @@ export default function PDFmanager({navigation , text, onOK}) {
 
                     if( parsedData[i]['sale_item_rel']['itemcategory'] == 'EGGS' || parsedData[i]['sale_item_rel']['itemcategory'] == 'eggs' ){
                         setHasNonVatProducts(true);
-                        console.log(hasNonVatProducts);
                     }else{
                         setHasVatProducts(true);
                     }
@@ -283,6 +280,50 @@ export default function PDFmanager({navigation , text, onOK}) {
 		ToastAndroid.showWithGravityAndOffset(message,ToastAndroid.LONG,ToastAndroid.BOTTOM,0,20);
 	};
 
+    getPrinterNameByDriver = () => {
+        return new Promise((resolve, reject) => {
+            AsyncStorage.getItem('user_id').then((res) => {
+                getDiverId(res).then((printerName) => {
+                    setBluetoothName(printerName)
+                    BluetoothManager.isBluetoothEnabled().then( (enabled) => {
+                        BluetoothManager.enableBluetooth().then( (r) => {
+                            
+                            setisBluetoothEnabled(true)
+                            if (r != undefined) {
+                                for (let i = 0; i < r.length; i++) {
+                                    // AsyncStorage.getItem('printerName').then((res) => {
+                                        if(res != null && res != undefined){
+                                            if(JSON.parse(r[i]).name == printerName){
+                                                paired.push(JSON.parse(r[i]).name);
+                                                setDevice(JSON.parse(r[i]).address)
+                                                console.log(JSON.parse(r[i]).address)
+
+                                            }
+                                        }else{
+                                            alert('No Printer available');
+                                        }
+                                    
+                                    // })
+                                }
+                            }else{
+                                alert('No Device detected');
+                            }
+                    
+                        },(err) => {
+                            alert(err);
+                        });
+                    },
+                        (err) => {
+                            alert(err);
+                        },
+                    );
+                })
+                resolve();
+            })
+        })
+        
+    }
+
     printDesign = async (buyerData , ItemData) => {
         setSaveOrderActivIndictor(false)
             await BluetoothEscposPrinter.printerAlign(
@@ -397,7 +438,6 @@ export default function PDFmanager({navigation , text, onOK}) {
             '--------------------------------\n\r',
             {},
         );
-        console.log(hasNonVatProducts)
         if( hasNonVatProducts ){
             await BluetoothEscposPrinter.printText('\n\r', {});
 
@@ -633,8 +673,7 @@ export default function PDFmanager({navigation , text, onOK}) {
     };
 
     printReceipt = () => {
-        if( device != undefined ){
-
+            
             if(selectedDriverId == 13){
                    AsyncStorage.getItem('readyForOrder').then((result) => {
                     let myData = JSON.parse(result)
@@ -643,7 +682,6 @@ export default function PDFmanager({navigation , text, onOK}) {
                     // myData.push({'remarks' : remarks});
                     // myData.push({'invoice_no' : invoiceNumber});
                     SaveOrder(JSON.stringify(myData)).then((res) => {
-                        console.log(res)
                         // setSaveOrderActivIndictor(false)
                         // AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
                         // AsyncStorage.setItem('orderSaveBuyer', JSON.stringify(res.data.buyer));
@@ -654,43 +692,77 @@ export default function PDFmanager({navigation , text, onOK}) {
                     })
                 })
             }else{
-                BluetoothManager.connect(device).then( (res) => {
-                    setSaveOrderActivIndictor(true)
-                    AsyncStorage.getItem('readyForOrder').then((result) => {
-                        let myData = JSON.parse(result)
-    
-                        myData.push({'signature' : base64,'remarks' : remarks,'invoice_no' : invoiceNumber});
-                        // myData.push({'remarks' : remarks});
-                        // myData.push({'invoice_no' : invoiceNumber});
-                        // console.log(JSON.stringify(myData))
-                        // return false;
-                        SaveOrder(JSON.stringify(myData)).then((res) => {
-                            // setSaveOrderActivIndictor(false)
-                            // AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
-                            // AsyncStorage.setItem('orderSaveBuyer', JSON.stringify(res.data.buyer));
-                            showToast('Order has been placed successfully')
-                            navigation.push('Dashboard');
-                            alert('Order has been placed successfully');
-                            if( selectedDriverId != 13 ){
-                                if( selectedDriverId != 13 ){
-                                    printDesign(res.data.buyer , res.data.data);
+                let hasPrinter = false;
+                setSaveOrderActivIndictor(true);  
+                AsyncStorage.getItem('user_id').then((res) => {
+                getDiverId(res).then((printerName) => {
+                    setBluetoothName(printerName)
+                    BluetoothManager.isBluetoothEnabled().then( (enabled) => {
+                        BluetoothManager.enableBluetooth().then( (r) => {
+                            
+                            if (r != undefined) {
+                                for (let i = 0; i < r.length; i++) {
+                                    // AsyncStorage.getItem('printerName').then((res) => {
+                                        if(res != null && res != undefined){
+                                            if(JSON.parse(r[i]).name == printerName){
+                                                hasPrinter = true;
+                                                paired.push(JSON.parse(r[i]).name);
+                                                setDevice(JSON.parse(r[i]).address)
+
+                                                    BluetoothManager.connect(JSON.parse(r[i]).address).then( (res) => {
+                                                        AsyncStorage.getItem('readyForOrder').then((result) => {
+                                                            let myData = JSON.parse(result)
+                                        
+                                                            myData.push({'signature' : base64,'remarks' : remarks,'invoice_no' : invoiceNumber});
+                                                            // myData.push({'remarks' : remarks});
+                                                            // myData.push({'invoice_no' : invoiceNumber});
+                                                            // return false;
+                                                            SaveOrder(JSON.stringify(myData)).then((res) => {
+                                                                // setSaveOrderActivIndictor(false)
+                                                                // AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
+                                                                // AsyncStorage.setItem('orderSaveBuyer', JSON.stringify(res.data.buyer));
+                                                                showToast('Order has been placed successfully')
+                                                                navigation.push('Dashboard');
+                                                                alert('Order has been placed successfully');
+                                                                if( selectedDriverId != 13 ){
+                                                                    if( selectedDriverId != 13 ){
+                                                                        printDesign(res.data.buyer , res.data.data);                                                                           
+                                                                    }
+                                                                }
+                                                            })
+                                                        })
+                                                    },(e) => {
+                                                        alert('Your Bluetooth printer is not connected.')
+                                                    });
+                                            }else{
+                                                if( i == (r.length-1) && !hasPrinter){
+                                                    alert("Printer "+printerName+" not available.");
+                                                }
+                                            }
+                                        }else{
+                                            alert('No Printer available');
+                                        }
+                                    
+                                    // })
                                 }
+                            }else{
+                                alert('No Device detected');
                             }
-                        })
-                    })
-                },(e) => {
-                    alert('Your Bluetooth printer is not connected.')
-                });
-            }
-
-
-
-
-        }else{
-            alert('printer not connected');
+                    
+                        },(err) => {
+                            alert(err);
+                        });
+                    },
+                        (err) => {
+                            alert(err);
+                        },
+                    );
+                })
+            })
         }
-
-    };
+        setisBluetoothEnabled(false)
+        setSaveOrderActivIndictor(false)
+    }
     function changeCreditStatus(status) {
 		setCreditStatus(status)
 	}
@@ -747,7 +819,6 @@ export default function PDFmanager({navigation , text, onOK}) {
                                         
                                     {(savedOrderResonce != undefined) ?
                                         savedOrderResonce.map((value , key) => {
-                                            console.log(value)
                                             return (
                                                 <View key={key} >
                                                     {( value['sale_item_rel'].itemcategory == 'EGGS' ) ?
@@ -948,7 +1019,6 @@ export default function PDFmanager({navigation , text, onOK}) {
                                 
                             {(savedOrderResonce != undefined) ?
                                 savedOrderResonce.map((value , key) => {
-                                    console.log(value)
                                     return (
                                         <View key={key} >
                                             {( value['sale_item_rel'].itemcategory == 'EGGS' ) ?
@@ -1098,8 +1168,8 @@ export default function PDFmanager({navigation , text, onOK}) {
                 <Input placeholder="Add Remarks" value={remarks} allowFontScaling={false} onChange={(value) => {setRemarks(value.nativeEvent.text)}}/>
             </View>
             <View  style={{ flex: 0.05 ,width: '100%' }}>
-                <Button title="Print" onPress={() => { printReceipt() }} />
-                {(saveOrderActivIndictor)? <ActivityIndicator color="white" size="large" /> : <View></View>}
+                            
+                {(saveOrderActivIndictor)? <ActivityIndicator  color={Colors.primary} size="large" /> : <Button title="Print" onPress={() => { alert('loading Data...'); console.log(saveOrderActivIndictor); printReceipt() }} />}
             </View>
         </View>
 	);
