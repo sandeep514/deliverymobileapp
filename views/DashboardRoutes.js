@@ -4,7 +4,7 @@ import {Icon, ListItem} from 'react-native-elements';
 import {Colors} from '../components/Colors';
 import MainScreen from '../layout/MainScreen';
 import {heightToDp} from '../utils/Responsive';
-import MapView, { Marker } from 'react-native-maps';
+// import MapView, { Marker } from 'react-native-maps';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPriorityDrivers } from '../api/apiService';
 import { Text } from 'react-native';
@@ -88,12 +88,12 @@ const list = [
                 <View style={styles.container}>
                     
                     <View style={styles.map} >
-                        <MapView style={styles.maps} initialRegion={{ latitude: coord.latitude, longitude: coord.longitude, latitudeDelta: 0.0622, longitudeDelta: 0.0121 }}>
+                        {/* <MapView style={styles.maps} initialRegion={{ latitude: coord.latitude, longitude: coord.longitude, latitudeDelta: 0.0622, longitudeDelta: 0.0121 }}>
                             <Marker coordinate={coord} >
                                 <Image source={ require('../images/MY19_M1CA46_SI_SR_9147_DS.png')} />
                             </Marker>
                             <Marker coordinate={coordinates[1]} ></Marker>
-                        </MapView>
+                        </MapView> */}
                     </View>
 
 
@@ -106,7 +106,7 @@ const list = [
                         <Pressable onPress={ () => {
                             
                             AsyncStorage.setItem('selectedLoadedItemsByQty' , JSON.stringify({}))                         
-                            navigation.navigate('ItemsScreenWithQty') 
+                            navigation.push('ItemsScreenWithQty') 
                         }}>
                             <Icon name="chevron-right" type='font-awesome' color="white" style={{padding: 10}}/>
                         </Pressable>
@@ -123,11 +123,11 @@ const list = [
                                                 <ListItem.Title>{l.name}</ListItem.Title>
                                                 <ListItem.Title style={{color: 'grey',fontSize: 12}}>{l.address}</ListItem.Title>
                                             </ListItem.Content>
-                                                {( l.id == 76 ) ?
+                                                {/* {( l.id == 76 ) ?
                                                     <View style={{ backgroundColor: 'green' ,paddingHorizontal:10,paddingVertical: 10 , borderRadius: 100 }}><Text style={{color: 'white'}}>P</Text></View>
                                                 :
                                                     <View></View>
-                                                }
+                                                } */}
                                         </ListItem>
                                     </TouchableHighlight>
                                 )) 
@@ -147,7 +147,7 @@ const list = [
         container: {
             flex: 1,
             // justifyContent: 'space-between',
-            paddingBottom: '20%',
+            // paddingBottom: '20%',
         },
         nextButton: {
             alignSelf: 'flex-end',

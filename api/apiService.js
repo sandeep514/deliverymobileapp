@@ -14,7 +14,6 @@ export const  generateRandString = () => {
 export const checkLogin = ( postedData ) => {
 	return new Promise( (resolve , reject) => {
 		apiClient.post('driver-login' , { username : postedData.username , password : postedData.password}).then((response) => {
-			console.log(response);
 			if(response.data.status == true){
 				resolve(response);
 			}else{
@@ -110,7 +109,6 @@ export const getItemsByVehicleAndLoads = ( vehicheId , load_numbers ) => {
 export const getVehicleLoadCount = ( vehicheId , load_numbers ) => {
 	return new Promise( (resolve , reject) => {
 		apiClient.post('get-count-by-vehicle-load' , { vehicle_id : vehicheId , load_numbers : JSON.parse(load_numbers)}).then((response) => {
-		console.log(response);
 			if(response.data.status == true){
 				resolve(response);
 			}else{
@@ -157,7 +155,6 @@ export const SaveVehicleNotes = ( newComment ) => {
 export const updatePaymentStatus = ( invoice , status ) => {
 	return new Promise( (resolve , reject) => {
 		apiClient.post('update-invoice-payment-type' , {invoice_number : invoice , payment_type: status}).then((response) => {
-			console.log(response)
 			if(response.data.status == true){
 				resolve(response);
 			}else{
@@ -239,7 +236,6 @@ export const getCartItemDetails = ( postedData ) => {
 export const updateDriverForsale = ( postedData ) => {
 	return new Promise( (resolve , reject) => {
 		apiClient.post('update-driver-for-sale' , postedData).then((response) => {
-			console.log(response)
 
 			if(response.data.status == true){
 				resolve(response);

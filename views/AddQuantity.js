@@ -186,9 +186,6 @@
 			}else{
 				// setSaveOrderActivIndictor(true)
 				AsyncStorage.setItem('finalItems' , JSON.stringify(setUpdatedDataArray));
-				console.log('+++++++++++++++++')
-				console.log(JSON.stringify(setUpdatedDataArray))
-				console.log('+++++++++++++++++')
 				updateRecords(setUpdatedDataArray).then((res) => {
 					let data = [];
 					data.push(res)
@@ -196,7 +193,7 @@
 					AsyncStorage.getItem('currentVATstatus').then((VATstatus) => {
 						// data.push({'has_vat' : parseInt(VATstatus)});
 						AsyncStorage.setItem('readyForOrder' , JSON.stringify(data));
-						navigation.navigate('PDFmanager');
+						navigation.push('PDFmanager');
 					})
 	
 				})
@@ -269,7 +266,6 @@
 		}
 
 		function updateQty(dnum , itemId , qty ){
-			console.log(dnum , itemId , qty);
 			let myData = Object.values(data);
 			let newQty = 0;
 			
@@ -552,7 +548,7 @@
 								<Text style={{textAlign: 'center'}}><ActivityIndicator size="large" color="white"></ActivityIndicator></Text>
 							</View>
 						:
-							<Pressable style={{padding: 16,backgroundColor:Colors.primary,flexDirection: 'row',justifyContent: 'center'}}><Text style={{textAlign: 'center',color: 'white',fontSize: 20}} onPress={() => { SaveOrders() }}> Place order and print invoice £{(parseFloat(MyTotalPrice) ).toFixed(2)} </Text>
+							<Pressable style={{padding: 16,backgroundColor:Colors.primary,flexDirection: 'row',justifyContent: 'center'}} onPress={() => { SaveOrders() }}><Text style={{textAlign: 'center',color: 'white',fontSize: 20}} > Place order and print invoice £{(parseFloat(MyTotalPrice) ).toFixed(2)} </Text>
 							</Pressable>
 						}
 						{/* {setTotalAmount} */}

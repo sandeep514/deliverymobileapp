@@ -122,9 +122,6 @@ printReceipt = (data) => {
                                                 BluetoothManager.connect(JSON.parse(r[i]).address).then( (ress) => {
                                                     printDesign( Object.values(res) , invoiceNo , buyerName ,buyerAddress , buyerPhone );
                                                 },(e) => {
-                                                    if( e == 'Unable to connect device'){
-                                                        console.log("here")
-                                                    }
                                                     console.log(e['Error']);
                                                     alert(e)
                                                     setPrintingIndicator(false);
@@ -203,8 +200,6 @@ getPrinterNameByDriver = () => {
     
 }
 printDesign = async (data , invoiceNo , buyerName, buyerAddress , buyerPhone) => {
-    // console.log(data[0]);
-    // return false;
     let totalAmount = 0;
 
     await BluetoothEscposPrinter.printerAlign(
@@ -271,7 +266,7 @@ printDesign = async (data , invoiceNo , buyerName, buyerAddress , buyerPhone) =>
                 BluetoothEscposPrinter.ALIGN.CENTER,
                 BluetoothEscposPrinter.ALIGN.RIGHT,
             ],
-            ['Customer','', '','Date:'],
+            ['Customer','', '','Date:'+data[0].idate],
         {},
     );
     await BluetoothEscposPrinter.printText(
@@ -386,30 +381,70 @@ printDesign = async (data , invoiceNo , buyerName, buyerAddress , buyerPhone) =>
                         BluetoothEscposPrinter.ALIGN.CENTER,
                         BluetoothEscposPrinter.ALIGN.CENTER,
                     ],
-                    [(qty*1).toFixed(0), '$'+salePrice,'$'+(qty*salePrice).toFixed(2),'$'+vat, '$'+amount],
-                {});
+                    [(qty*1).toFixed(0), '£'+salePrice,'£'+(qty*salePrice).toFixed(2),'£'+vat, '£'+amount],
+                { encoding: 'Cp858',codepage: 13,widthtimes: 0.6 , heigthtimes: 0.6 });
+                 await BluetoothEscposPrinter.printText(
+                    '-------------------------------\n',
+                    {},
+                );
             }
         }
-        await BluetoothEscposPrinter.printText(
-            '--------------------------------\n\r',
-            {},
+        // await BluetoothEscposPrinter.printText(
+        //     '--------------------------------\n\r',
+        //     {},
+        // );
+        // await BluetoothEscposPrinter.printColumn(
+        //     columnWidthsTotal,
+        //     [
+        //         BluetoothEscposPrinter.ALIGN.LEFT,
+        //         BluetoothEscposPrinter.ALIGN.CENTER,
+        //         BluetoothEscposPrinter.ALIGN.CENTER,
+        //         BluetoothEscposPrinter.ALIGN.CENTER,
+        //         BluetoothEscposPrinter.ALIGN.RIGHT,
+        //     ],
+        //     ["Total: ", '','£'+(beforeVatPrice).toFixed(2),'£'+(vatAmount).toFixed(2), '£'+(beforeVatPrice + vatAmount).toFixed(2)],
+        // {encoding: 'Cp858',codepage: 13});
+        // await BluetoothEscposPrinter.printText(
+        //     '--------------------------------\n\r',
+        //     {},
+        // );
+        // await BluetoothEscposPrinter.printText('\n\r', {});
+        await BluetoothEscposPrinter.printerAlign(
+            BluetoothEscposPrinter.ALIGN.RIGHT,
         );
-        await BluetoothEscposPrinter.printColumn(
-            columnWidthsTotal,
-            [
-                BluetoothEscposPrinter.ALIGN.LEFT,
-                BluetoothEscposPrinter.ALIGN.CENTER,
-                BluetoothEscposPrinter.ALIGN.CENTER,
-                BluetoothEscposPrinter.ALIGN.CENTER,
+         await BluetoothEscposPrinter.printText(
+                'Amount Before VAT: '+'£'+(beforeVatPrice).toFixed(2),
+                 {encoding: 'Cp858',codepage: 13}
+            );
+            await BluetoothEscposPrinter.printText(
+                '\n\r',
+                {},
+            );
+
+            await BluetoothEscposPrinter.printerAlign(
                 BluetoothEscposPrinter.ALIGN.RIGHT,
-            ],
-            ["Total: ", '','$'+(beforeVatPrice).toFixed(2),'$'+(vatAmount).toFixed(2), '$'+(beforeVatPrice + vatAmount).toFixed(2)],
-        {});
-        await BluetoothEscposPrinter.printText(
-            '--------------------------------\n\r',
-            {},
-        );
-        await BluetoothEscposPrinter.printText('\n\r', {});
+            );
+            // await BluetoothEscposPrinter.printText('Price：30\n\r', {});
+            await BluetoothEscposPrinter.printText(
+                'VAT: '+'£'+(vatAmount).toFixed(2),
+                 {encoding: 'Cp858',codepage: 13}
+            );
+            await BluetoothEscposPrinter.printText(
+                '\n\r',
+                {},
+            );
+            await BluetoothEscposPrinter.printerAlign(
+                BluetoothEscposPrinter.ALIGN.RIGHT,
+            );
+            // await BluetoothEscposPrinter.printText('Price：30\n\r', {});
+            await BluetoothEscposPrinter.printText(
+                'Total: '+'£'+(beforeVatPrice + vatAmount).toFixed(2),
+                 {encoding: 'Cp858',codepage: 13}
+            );
+            await BluetoothEscposPrinter.printText(
+                '\n\r',
+                {},
+            );
     }
     let columnWidthsVat = [12, 4, 8, 8];
     let nonVatTotal = 0;
@@ -478,8 +513,8 @@ printDesign = async (data , invoiceNo , buyerName, buyerAddress , buyerPhone) =>
                         BluetoothEscposPrinter.ALIGN.CENTER,
                         BluetoothEscposPrinter.ALIGN.CENTER,
                     ],
-                    [(qty*1).toFixed(0), '$'+salePrice,'$'+amount],
-                {});
+                    [(qty*1).toFixed(0), '£'+salePrice,'£'+amount],
+                {encoding: 'Cp858',codepage: 13});
                 await BluetoothEscposPrinter.printText('\n\r', {});
                 
             }
@@ -488,7 +523,7 @@ printDesign = async (data , invoiceNo , buyerName, buyerAddress , buyerPhone) =>
                     BluetoothEscposPrinter.ALIGN.RIGHT,
                 );
                 await BluetoothEscposPrinter.printText(
-                    'Total:'+(nonVatTotal).toFixed(2),{}
+                    'Total: £'+(nonVatTotal).toFixed(2),{ encoding: 'Cp858',codepage: 13 },
                 );
                 await BluetoothEscposPrinter.printText('\n\r', {});
 
@@ -510,8 +545,8 @@ printDesign = async (data , invoiceNo , buyerName, buyerAddress , buyerPhone) =>
             BluetoothEscposPrinter.ALIGN.CENTER,
             BluetoothEscposPrinter.ALIGN.RIGHT,
         ],
-        ['', '', 'Total: ','$'+(totalAmount+nonVatTotal)],
-        {
+        ['', '', 'Total: ','£'+(totalAmount+nonVatTotal).toFixed(2)],
+        {encoding: 'Cp858',codepage: 13
         },
     );
 
@@ -567,7 +602,7 @@ return (
                                                 </ListItem.Subtitle>
                                             </ListItem.Content>
                                             <View>
-                                                <Pressable style={{backgroundColor: Colors.primary,paddingHorizontal: 20,paddingVertical: 10}} onPress={() => { printReceipt(l) }} >
+                                                <Pressable style={{backgroundColor: Colors.primary,paddingHorizontal: 20,paddingVertical: 10}} onPress={() => { setPrintingIndicator(true); printReceipt(l) }} >
                                                     <Text style={{color: 'white'}}>Print</Text>
                                                 </Pressable>
                                             </View>

@@ -145,11 +145,11 @@ export default function Nav() {
 					component={PDFmanager}
 					options={( {navigation} ) => ({
 						headerShown: true , title : 'Invoice',
-						// headerLeft: () => (
-						// 	<Pressable onPress={() => { navigation.navigate('Dashboard')}}>
-						// 		<Icon name="home" color={Colors.primary} style={{marginLeft: 10,padding: 10}} />
-						// 	</Pressable>
-						// ),
+						headerLeft: () => (
+							<Pressable onPress={() => { navigation.navigate('Dashboard')}}>
+								<Icon name="home" color={Colors.primary} style={{marginLeft: 10,padding: 10}} />
+							</Pressable>
+						),
 					})}
 				/>
 			</Stack.Navigator>

@@ -24,9 +24,6 @@ export default function ItemsScreenWithQty({navigation}) {
 	
 	useEffect(() => {
 		AsyncStorage.getItem('cartItems').then((data) => {
-			console.log("here")
-			console.log(data)
-			console.log("here")
 		// 	let myRecords = {};
 		// 	let myRecordsFinal = {};
 		// 	let relData = JSON.parse(data);
