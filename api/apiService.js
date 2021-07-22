@@ -52,8 +52,9 @@ export const getRoutes = () => {
 export const getDiverId = (driverId) => {
 	return new Promise( (resolve , reject) => {
 		apiClient.get('get-printer-device/'+driverId).then((res) => {
+			console.log(res)
 			if( res.data.status == true){
-				resolve(res.data.printerName)
+				resolve(res.data)
 			}else{
 				reject('No routes available');
 			}

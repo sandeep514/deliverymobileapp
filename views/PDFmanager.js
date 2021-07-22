@@ -644,6 +644,366 @@ export default function PDFmanager({navigation , text, onOK}) {
             );
             await BluetoothEscposPrinter.printText('\n\r', {});
 
+            //images
+            await BluetoothEscposPrinter.printerAlign(
+                BluetoothEscposPrinter.ALIGN.LEFT,
+            );
+            await BluetoothEscposPrinter.printText('Signature: \n\r', {
+                    encoding: 'GBK',
+                    codepage: 0,
+                    widthtimes: 0,
+                    heigthtimes: 0,
+                    fonttype: 1,
+                });
+            await BluetoothEscposPrinter.printPic(base64, {width: 100,left: 100,height: 50});
+
+
+            await BluetoothEscposPrinter.printText('\n\r', {});
+            await BluetoothEscposPrinter.printerAlign(
+                BluetoothEscposPrinter.ALIGN.LEFT,
+            );
+            await BluetoothEscposPrinter.printText('Remarks: \n\r', {
+                encoding: 'GBK',
+                codepage: 0,
+                widthtimes: 0,
+                heigthtimes: 0,
+                fonttype: 1,
+            });
+            await BluetoothEscposPrinter.printerAlign(
+            BluetoothEscposPrinter.ALIGN.CENTER,
+        );
+            await BluetoothEscposPrinter.printText(remarks+'\n\r', {
+                encoding: 'GBK',
+                codepage: 0,
+                widthtimes: 1,
+                heigthtimes: 1,
+                fonttype: 1,
+            });
+
+            await BluetoothEscposPrinter.printText('\n\r', {});
+            await BluetoothEscposPrinter.printText('\n\r', {});
+    };
+        printDesignStarPrinter = async (buyerData , ItemData, extraData) => {
+        
+            await BluetoothEscposPrinter.printerAlign(
+                BluetoothEscposPrinter.ALIGN.CENTER,
+            );
+            await BluetoothEscposPrinter.setBlob(0);
+            await BluetoothEscposPrinter.printText('UK Inch\n\r', { 
+                encoding: 'GBK',
+                codepage: 0,
+                widthtimes: 3,
+                heigthtimes: 3,
+                fonttype: 1,
+            });
+            await BluetoothEscposPrinter.setBlob(0);
+            await BluetoothEscposPrinter.printText('94 Staceway Worth, Crawley, RH107YR\n\r', {
+                encoding: 'GBK',
+                codepage: 0,
+                widthtimes: 0,
+                heigthtimes: 0,
+                fonttype: 1,
+            });
+            await BluetoothEscposPrinter.printerAlign(
+                BluetoothEscposPrinter.ALIGN.CENTER,
+            );
+            await BluetoothEscposPrinter.printText('Phone: 07917105510\n\r', {
+                encoding: 'GBK',
+                codepage: 0,
+                widthtimes: 0,
+                heigthtimes: 0,
+                fonttype: 1,
+            });
+            await BluetoothEscposPrinter.printerAlign(
+                BluetoothEscposPrinter.ALIGN.CENTER,
+            );
+            await BluetoothEscposPrinter.printText('Email: Ekinch2@gmail.com\n\r', {
+                encoding: 'GBK',
+                codepage: 0,
+                widthtimes: 0,
+                heigthtimes: 0,
+                fonttype: 1,
+            });
+            await BluetoothEscposPrinter.printerAlign(
+                BluetoothEscposPrinter.ALIGN.LEFT,
+            );
+            // await BluetoothEscposPrinter.printText('Price：30\n\r', {});
+            await BluetoothEscposPrinter.printText(
+                'INVOICE: '+invoiceNumber,
+                {},
+            );
+            await BluetoothEscposPrinter.printText(
+                '\n\r',
+                {},
+            );
+            await BluetoothEscposPrinter.printText(
+                '--------------------------------\n\r',
+                {}  ,
+            );
+            let columnWidthsHeader = [12, 2, 2, 16];
+            await BluetoothEscposPrinter.printColumn(
+                columnWidthsHeader,
+                    [
+                        BluetoothEscposPrinter.ALIGN.LEFT,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.RIGHT,
+                    ],
+                    ['Customer','', '','Date:'+savedOrderResonce[0]['ddate']],
+                {},
+            );
+            await BluetoothEscposPrinter.printText(
+                '--------------------------------\n\r',
+                {}  ,
+            );
+
+            let columnWidthsHeaderName = [9, 1, 1, 20];
+            await BluetoothEscposPrinter.printColumn(
+                columnWidthsHeaderName,
+                    [
+                        BluetoothEscposPrinter.ALIGN.LEFT,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.RIGHT,
+                    ],
+                    ['Name:','', '',buyerData['name']],
+                {},
+            );
+            let columnWidthsHeaderAddress = [9,1,1,20];
+            await BluetoothEscposPrinter.printColumn(
+                columnWidthsHeaderAddress,
+                    [
+                        BluetoothEscposPrinter.ALIGN.LEFT,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.RIGHT,
+                    ],
+                    ['Address:','', '',buyerData['address']],
+                {},
+            );
+            let columnWidthsHeaderMobile = [9,1,1,20];
+            await BluetoothEscposPrinter.printColumn(
+                columnWidthsHeaderMobile,
+                    [
+                        BluetoothEscposPrinter.ALIGN.LEFT,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.CENTER,
+                        BluetoothEscposPrinter.ALIGN.RIGHT,
+                    ],
+                    ['Phone:','', '',buyerData['contact_no']],
+                {},
+            );
+            await BluetoothEscposPrinter.printText(
+                '--------------------------------\n\r',
+                {},
+            );
+            if( hasNonVatProducts ){
+                let columnWidthsHeaderPhone = [5,7,7,7,7];
+                await BluetoothEscposPrinter.printColumn(
+                    columnWidthsHeaderPhone,
+                        [
+                            BluetoothEscposPrinter.ALIGN.LEFT,
+                            BluetoothEscposPrinter.ALIGN.CENTER,
+                            BluetoothEscposPrinter.ALIGN.CENTER,
+                            BluetoothEscposPrinter.ALIGN.CENTER,
+                            BluetoothEscposPrinter.ALIGN.RIGHT,
+                        ],
+                        ['Qty', 'Price','Amount','VAT','Total'],
+                    {},
+                );
+
+                await BluetoothEscposPrinter.printText(
+                    '--------------------------------\n\r',
+                    {},
+                );
+                
+                let columnWidths = [5,7,7,7,7];
+                let columnWidthsTotal = [8,2,8,8,7];
+                for(let i = 0 ; i < savedOrderResonce.length ; i++){
+                    if( savedOrderResonce[i]['sale_item_rel'].itemcategory == 'EGGS' || savedOrderResonce[i].has_vat == 1){
+                        let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
+                        let salePrice = savedOrderResonce[i]['sale_price'];
+                        let qty = savedOrderResonce[i]['qty'];
+                        let vat = 0;
+                        let amount = 0;
+                        if( savedOrderResonce[i]['sale_item_rel'].itemcategory != 'EGGS' ){
+                            vat = (( (( ( (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']) * 1.20 ) - (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']))) ).toFixed(2)).toString();
+                        }
+                        if( savedOrderResonce[i]['sale_item_rel'].itemcategory == 'EGGS' ){
+                            amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
+                        }else{
+                            amount = (( (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']) * 1.20 ).toFixed(2)).toString();
+                        }
+                        
+                        totalAmount = (parseFloat(totalAmount));
+
+                        await BluetoothEscposPrinter.printerAlign(
+                            BluetoothEscposPrinter.ALIGN.LEFT,
+                        );
+                        await BluetoothEscposPrinter.printText(
+                            sitem+'\n\r',
+                            {},
+                        );
+                        await BluetoothEscposPrinter.printColumn(
+                            columnWidths,
+                            [
+                                BluetoothEscposPrinter.ALIGN.LEFT,
+                                BluetoothEscposPrinter.ALIGN.LEFT,
+                                BluetoothEscposPrinter.ALIGN.CENTER,
+                                BluetoothEscposPrinter.ALIGN.CENTER,
+                                BluetoothEscposPrinter.ALIGN.CENTER,
+                            ],
+                            [(qty*1).toFixed(0), '£'+salePrice,'£'+(qty*salePrice).toFixed(2),'£'+vat, '£'+amount],
+                        {encoding: 'Cp858',codepage: 13});
+                        await BluetoothEscposPrinter.printText(
+                            '-------------------------------\n',
+                            {},
+                        );
+                    }
+                }
+                await BluetoothEscposPrinter.printerAlign(
+                    BluetoothEscposPrinter.ALIGN.RIGHT,
+                );
+                // await BluetoothEscposPrinter.printText('Price：30\n\r', {});
+                await BluetoothEscposPrinter.printText(
+                    'Amount Before VAT: '+'£'+(VATTotal).toFixed(2),
+                    {encoding: 'Cp858',codepage: 13}
+                );
+                await BluetoothEscposPrinter.printText(
+                    '\n\r',
+                    {},
+                );
+
+                await BluetoothEscposPrinter.printerAlign(
+                    BluetoothEscposPrinter.ALIGN.RIGHT,
+                );
+                // await BluetoothEscposPrinter.printText('Price：30\n\r', {});
+                await BluetoothEscposPrinter.printText(
+                    'VAT: '+'£'+(VatProductTotal-VATTotal).toFixed(2),
+                    {encoding: 'Cp858',codepage: 13}
+                );
+                await BluetoothEscposPrinter.printText(
+                    '\n\r',
+                    {},
+                );
+                await BluetoothEscposPrinter.printerAlign(
+                    BluetoothEscposPrinter.ALIGN.RIGHT,
+                );
+                // await BluetoothEscposPrinter.printText('Price：30\n\r', {});
+                await BluetoothEscposPrinter.printText(
+                    'Total: '+'£'+(VatProductTotal).toFixed(2),
+                    {encoding: 'Cp858',codepage: 13}
+                );
+                await BluetoothEscposPrinter.printText(
+                    '\n\r',
+                    {},
+                );
+                //     ["Total: ", '','','', '£'+(VatProductTotal).toFixed(2)], {encoding: 'Cp858',codepage: 13});
+                    await BluetoothEscposPrinter.printText(
+                        '--------------------------------\n\r',
+                        {},
+                    );
+
+                
+            }
+            
+            if(WithoutVatProductTotal > 0){
+
+                await BluetoothEscposPrinter.printText('\n\r', {});
+                await BluetoothEscposPrinter.printerAlign(
+                    BluetoothEscposPrinter.ALIGN.CENTER,
+                );
+                await BluetoothEscposPrinter.printText(
+                    '*************************',
+                    {encoding: 'GBK',
+                    codepage: 0,
+                    widthtimes: 0,
+                    heigthtimes: 0,
+                    fonttype: 1
+                });
+
+                await BluetoothEscposPrinter.printText('\n\r', {});
+
+                let columnWidthsHeaderPhoneVat = [10,10,10];
+                await BluetoothEscposPrinter.printColumn(
+                    columnWidthsHeaderPhoneVat,
+                        [
+                            BluetoothEscposPrinter.ALIGN.LEFT,
+                            BluetoothEscposPrinter.ALIGN.LEFT,
+                            BluetoothEscposPrinter.ALIGN.CENTER,
+                        ],
+                        ['Qty', 'Price','Amount'],
+                    {},
+                );
+        
+                await BluetoothEscposPrinter.printText(
+                    '--------------------------------\n\r',
+                    {},
+                );
+        
+                for(let i = 0 ; i < savedOrderResonce.length ; i++){
+                    if( savedOrderResonce[i]['sale_item_rel'].itemcategory != 'EGGS' && !savedOrderResonce[i]['has_vat'] ){
+                        let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
+                        let salePrice = savedOrderResonce[i]['sale_price'];
+                        let qty = savedOrderResonce[i]['qty'];
+                        let amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
+                        let vat = 0;
+
+
+                        totalAmount = (parseFloat(totalAmount));
+                        await BluetoothEscposPrinter.printerAlign(
+                            BluetoothEscposPrinter.ALIGN.LEFT,
+                        );
+                        await BluetoothEscposPrinter.printText(
+                            sitem,
+                            {},
+                        );
+                        await BluetoothEscposPrinter.printText(
+                            '\n\r',
+                            {},
+                        );
+
+                        let columnWidthsVat = [10,10,10];
+                        await BluetoothEscposPrinter.printColumn(
+                            columnWidthsVat,
+                            [
+                                BluetoothEscposPrinter.ALIGN.CENTER,
+                                BluetoothEscposPrinter.ALIGN.CENTER,
+                                BluetoothEscposPrinter.ALIGN.CENTER,
+                            ],
+                            [(qty*1).toFixed(0), '£'+salePrice,'£'+amount],
+                        {encoding: 'Cp858',codepage: 13});
+                        await BluetoothEscposPrinter.printText('\n\r', {});
+                    }
+                }
+                await BluetoothEscposPrinter.printerAlign(
+                    BluetoothEscposPrinter.ALIGN.RIGHT,
+                );
+                await BluetoothEscposPrinter.printText(
+                    'Total: £'+(WithoutVatProductTotal).toFixed(2),
+                    { encoding: 'Cp858',codepage: 13 },
+                );
+                await BluetoothEscposPrinter.printText('\n\r', {});
+
+                await BluetoothEscposPrinter.printText(
+                    '--------------------------------\n\r',
+                    {},
+                );
+            }
+
+            let columnWidthsVat = [2,2,14,10];
+            await BluetoothEscposPrinter.printColumn(
+                columnWidthsVat,
+                [
+                    BluetoothEscposPrinter.ALIGN.LEFT,
+                    BluetoothEscposPrinter.ALIGN.LEFT,
+                    BluetoothEscposPrinter.ALIGN.CENTER,
+                    BluetoothEscposPrinter.ALIGN.RIGHT,
+                ],
+                ['', '', 'Grand Total: ','£'+(WithoutVatProductTotal+VatProductTotal).toFixed(2)],
+                { encoding: 'Cp858',codepage: 13 },
+            );
+            await BluetoothEscposPrinter.printText('\n\r', {});
 
             //images
             await BluetoothEscposPrinter.printerAlign(
@@ -684,6 +1044,7 @@ export default function PDFmanager({navigation , text, onOK}) {
             await BluetoothEscposPrinter.printText('\n\r', {});
             await BluetoothEscposPrinter.printText('\n\r', {});
     };
+
     goToDashboard = () =>{
         AsyncStorage.removeItem('selectedLoadedItemsByQty')
         AsyncStorage.removeItem('VATStatus');
@@ -719,16 +1080,16 @@ export default function PDFmanager({navigation , text, onOK}) {
                 let hasPrinter = false;
                 setSaveOrderActivIndictor(true);  
                 AsyncStorage.getItem('user_id').then((res) => {
-                getDiverId(res).then((printerName) => {
-                    setBluetoothName(printerName)
+                getDiverId(res).then((result) => {
+                    setBluetoothName(result.printerName)
                     BluetoothManager.isBluetoothEnabled().then( (enabled) => {
                         BluetoothManager.enableBluetooth().then( (r) => {
                             
                             if (r != undefined) {
                                 for (let i = 0; i < r.length; i++) {
-                                    // AsyncStorage.getItem('printerName').then((res) => {
+                                    // AsyncStorage.getItem('result.printerName').then((res) => {
                                         if(res != null && res != undefined){
-                                            if(JSON.parse(r[i]).name == printerName){
+                                            if(JSON.parse(r[i]).name == result.printerName){
                                                 hasPrinter = true;
                                                 paired.push(JSON.parse(r[i]).name);
                                                 setDevice(JSON.parse(r[i]).address)
@@ -748,7 +1109,11 @@ export default function PDFmanager({navigation , text, onOK}) {
                                                                 showToast('Order has been placed successfully')
                                                                 if( selectedDriverId != 13 ){
                                                                     if( selectedDriverId != 13 ){
-                                                                        printDesign(res.data.buyer , res.data.data, res);
+                                                                        if( result.printerType == 'general'){
+                                                                            printDesign(res.data.buyer , res.data.data, res);
+                                                                        }else{
+                                                                            printDesignStarPrinter(res.data.buyer , res.data.data, res);
+                                                                        }
                                                                         // confirm('Order Places Successfully')
                                                                        
                                                                         setModalVisible(true)
@@ -763,7 +1128,7 @@ export default function PDFmanager({navigation , text, onOK}) {
                                             }else{
                                                 if( i == (r.length-1) && !hasPrinter){
                                                     setSaveOrderActivIndictor(false);  
-                                                    alert("Printer "+printerName+" not available.");
+                                                    alert("Printer "+result.printerName+" not available.");
                                                 }
                                             }
                                         }else{
@@ -807,7 +1172,7 @@ export default function PDFmanager({navigation , text, onOK}) {
             {( win.width > 550)?
                 <View >
                     
-                    <View style={{flexDirection: 'row',borderWidth: 1 ,borderColor: 'red',height: '100%'}}>
+                    <View style={{flexDirection: 'row',height: '100%'}}>
                         <View style={{width: '50%'}} >
                             <ScrollView>
                                 <View >
@@ -1027,8 +1392,8 @@ export default function PDFmanager({navigation , text, onOK}) {
                 </View>
         
             :
-                <View >
-                    <View style={{ flex: 0.35 ,width: '100%' }}>
+                <View style={{flex:1}}>
+                    <View style={{ height: '30%' ,width: '100%' }}>
                         <ScrollView>
                             <View >
                                 <Text style={{fontSize: 20, color: 'black', fontWeight: '700',backgroundColor: 'white',textAlign: 'center'}}>
@@ -1225,29 +1590,39 @@ export default function PDFmanager({navigation , text, onOK}) {
                         </ScrollView>
 
                     </View>
-                    <View style={{ flex: 0.5 ,width: '100%' }}>
-                        <Text style={{fontSize: 20, color: 'black', fontWeight: '700',backgroundColor: 'lightgrey',textAlign: 'center'}}>
-                            Signature
-                        </Text>
+                    <View style={{}}>
+                        <View style={{ height: '50%',width: '100%' }}>
+                            <Text style={{fontSize: 20, color: 'black', fontWeight: '700',backgroundColor: 'lightgrey',textAlign: 'center'}}>
+                                Signature
+                            </Text>
                             <View style={styles.container}>
                                 <SignatureScreen
                                     ref={ref}
                                     onOK={handleSignature} 
                                 />
-                            
                             </View>
-                    </View>
+                        </View>
 
-                    <View  style={{ flex: 0.11 ,width: '100%' }}>
-                        <Text style={{fontSize: 20, color: 'black', fontWeight: '700',backgroundColor: 'lightgrey',textAlign: 'center'}}>
-                            Remarks
-                        </Text>
-                        <Input placeholder="Add Remarks" value={remarks} allowFontScaling={false} onChange={(value) => {setRemarks(value.nativeEvent.text)}}/>
-                    </View>
-                    <View  style={{ flex: 0.05 ,width: '100%' }}>
+                        <View  style={{ width: '100%' }}>
+                            <Text style={{fontSize: 20, color: 'black', fontWeight: '700',backgroundColor: 'lightgrey',textAlign: 'center'}}>
+                                Remarks
+                            </Text>
+                            <Input placeholder="Add Remarks" value={remarks} allowFontScaling={false} onChange={(value) => {setRemarks(value.nativeEvent.text)}}/>
+                        </View>
+                        <View  style={{ flex: 1 ,width: '100%' }}>
                                     
-                        {(saveOrderActivIndictor)? <ActivityIndicator  color={Colors.primary} size="large" /> : <Button title="Print" onPress={() => {setSaveOrderActivIndictor(true);  printReceipt() }} />}
+                            {(saveOrderActivIndictor)? 
+                                <ActivityIndicator  color={Colors.primary} size="large" /> 
+                            : 
+                                <Button title="Print" onPress={() => {setSaveOrderActivIndictor(true);  printReceipt() }} />
+                            }
+                        </View>
                     </View>
+                        
+
+                        
+                    
+                    
 
                 </View>
             }

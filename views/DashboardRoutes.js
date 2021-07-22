@@ -35,14 +35,14 @@ const list = [
             AsyncStorage.removeItem('itemsAddedInCart')
             AsyncStorage.setItem('selectedLoadedItemsByQty',JSON.stringify({}));
             getRoutes()
-            AsyncStorage.getItem('location').then( (data) => {
-                let currentLoc = JSON.parse(data)
-                setCoord({  latitude: currentLoc.latitude,
-                            longitude: currentLoc.longitude,
-                            latitudeDelta: 1,
-                            longitudeDelta: 1
-                        })
-            })
+            // AsyncStorage.getItem('location').then( (data) => {
+            //     let currentLoc = JSON.parse(data)
+            //     setCoord({  latitude: currentLoc.latitude,
+            //                 longitude: currentLoc.longitude,
+            //                 latitudeDelta: 1,
+            //                 longitudeDelta: 1
+            //             })
+            // })
 
             return ( AsyncStorage.removeItem('selectedInvoiceId'))
         } , [])
