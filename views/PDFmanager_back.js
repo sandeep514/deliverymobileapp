@@ -17,12 +17,11 @@ var paired = [];
 let totalAmount = 0;
 let setUpdatedDataArray = [];
 
-export default function PDFmanager({navigation , text, onOK}) {
+export default function PDFmanagerback({navigation , text, onOK}) {
     var totalAmountVat = 0;
     var totalAmountWithoutVat = 0;
     var AmountVat = 0;
     let commandsArray = [];
-    let commandsArray2 = [];
 
     const ref = useRef();
 	const win = Dimensions.get('window');
@@ -324,7 +323,6 @@ export default function PDFmanager({navigation , text, onOK}) {
         })
         
     }
-
     async function connect() {
         try {
             var connect = await StarPRNT.connect('BT:', 'StarPRNT', 'false');
@@ -367,7 +365,7 @@ export default function PDFmanager({navigation , text, onOK}) {
             await BluetoothEscposPrinter.printerAlign(
                 BluetoothEscposPrinter.ALIGN.CENTER,
             );
-            await BluetoothEscposPrinter.printText('Email: Ukinch2@gmail.com\n\r', {
+            await BluetoothEscposPrinter.printText('Email: Ekinch2@gmail.com\n\r', {
                 encoding: 'GBK',
                 codepage: 0,
                 widthtimes: 0,
@@ -696,332 +694,189 @@ export default function PDFmanager({navigation , text, onOK}) {
     };
 
 
-    printDesignStarPrinter = async (buyerData , ItemData, extraData) => {
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-        
-        commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858});
-        commandsArray.push({appendEncoding: StarPRNT.Encoding.USASCII});
-        commandsArray.push({appendInternational: StarPRNT.InternationalType.UK});
-        commandsArray.push({appendBytes:[0x9c]});
-
-        commandsArray.push({appendBitmapText: "UK Inch\n",fontSize:32});
-        commandsArray.push({append: "94 Staceway Worth, Crawley, RH107YR\n"});
-        commandsArray.push({append: "Phone: 07917105510\n"});
-        commandsArray.push({append: "Email: Ukinch2@gmail.com\n"});
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-        commandsArray.push({append: 'INVOICE: '+invoiceNumber});
-        commandsArray.push({append: '\n'});
-        
-        //Customer Details
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-        commandsArray.push({append: '--------------------------------\n'});
-
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-        commandsArray.push({append: 'Customer'});
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-        commandsArray.push({append: 'Date: '+savedOrderResonce[0]['ddate']});
-        commandsArray.push({append: '\n'});
-
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-        commandsArray.push({append: '--------------------------------\n'});
-
-
-
-
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-        commandsArray.push({append: 'Name: '});
-        // commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-        commandsArray.push({append: buyerData['name']});
-        commandsArray.push({append: '\n'});
-
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-        commandsArray.push({append: 'Address: '});
-        // commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-        commandsArray.push({append: buyerData['address']});
-        commandsArray.push({append: '\n'});
-
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-        commandsArray.push({append: 'Phone: '});
-        // commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-        commandsArray.push({append: buyerData['contact_no']});
-        commandsArray.push({append: '\n'});
-
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-        commandsArray.push({append: '--------------------------------\n'});
-        
-
-        if( hasNonVatProducts ){
+        printDesignStarPrinter = async (buyerData , ItemData, extraData) => {
+            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
+            commandsArray.push({append: "UK Inch\n"});
+            commandsArray.push({append: "94 Staceway Worth, Crawley, RH107YR\n"});
+            commandsArray.push({append: "Phone: 07917105510\n"});
+            commandsArray.push({append: "Email: Ekinch2@gmail.com\n"});
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-            commandsArray.push({append: 'Qty  '});
-            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-            commandsArray.push({append: 'Price   '});
-            commandsArray.push({append: 'Amount   '});
-            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.right});
-            commandsArray.push({append: 'VAT   '});
-            commandsArray.push({append: 'Total'});
-
-            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
+            commandsArray.push({append: 'INVOICE: '+invoiceNumber});
             commandsArray.push({append: '\n'});
+            
+            //Customer Details
+            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
             commandsArray.push({append: '--------------------------------\n'});
 
-            for(let i = 0 ; i < savedOrderResonce.length ; i++){
-                if( savedOrderResonce[i]['sale_item_rel'].itemcategory == 'EGGS' || savedOrderResonce[i].has_vat == 1){
-                    let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
-                    let salePrice = savedOrderResonce[i]['sale_price'];
-                    let qty = savedOrderResonce[i]['qty'];
-                    let vat = 0;
-                    let amount = 0;
-                    
-                    if( savedOrderResonce[i]['sale_item_rel'].itemcategory != 'EGGS' ){
-                        vat = (( (( ( (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']) * 1.20 ) - (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']))) ).toFixed(2)).toString();
-                    }
-                    if( savedOrderResonce[i]['sale_item_rel'].itemcategory == 'EGGS' ){
-                        amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
-                    }else{
-                        amount = (( (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']) * 1.20 ).toFixed(2)).toString();
-                    }
-                    totalAmount = (parseFloat(totalAmount));
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-                    commandsArray.push({append: sitem+'\n'});
-
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-                    commandsArray.push({append: (qty*1).toFixed(0)+'   '});
-
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-                    commandsArray.push({append: '£'+salePrice+'   '});
-                    commandsArray.push({append: '£'+(qty*salePrice).toFixed(2)+'   '});
-
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-                    commandsArray.push({append: '£'+vat+'   '});
-                    commandsArray.push({append: '£'+amount+'   '});
-                    
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-                    commandsArray.push({append: '\n'});
-                    commandsArray.push({append: '--------------------------------\n'});
-                }
-            }
-
-            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-            commandsArray.push({append: 'Amount Before VAT: '+'£'+(VATTotal).toFixed(2)+'\n'});
-            commandsArray.push({append: 'VAT: '+'£'+(VatProductTotal-VATTotal).toFixed(2)+'\n'});
-            commandsArray.push({append:  'Total: '+'£'+(VatProductTotal).toFixed(2)+'\n'});
-        }
-        
-        if(WithoutVatProductTotal > 0){
-            commandsArray.push({append: '\n'});
-            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-            commandsArray.push({append: '*************************'});
-            
-            commandsArray.push({append: '\n'});
-            
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-            commandsArray.push({append: 'Qty'+'    '});
-            commandsArray.push({append: 'Price'+'    '});
-            commandsArray.push({append: 'Amount'});
-            commandsArray.push({append: '\n'});
-            commandsArray.push({append: '--------------------------------\n'});
-            
-            for(let i = 0 ; i < savedOrderResonce.length ; i++){
-                if( savedOrderResonce[i]['sale_item_rel'].itemcategory != 'EGGS' && !savedOrderResonce[i]['has_vat'] ){
-                    let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
-                    let salePrice = savedOrderResonce[i]['sale_price'];
-                    let qty = savedOrderResonce[i]['qty'];
-                    let amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
-                    let vat = 0;
-                    totalAmount = (parseFloat(totalAmount));
-
-                    
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-                    commandsArray.push({append: sitem});
-                    commandsArray.push({append: '\n'});
-                    
-                    commandsArray.push({ append: (qty*1).toFixed(0)+'    ' });
-
-                    commandsArray.push({ append: '£'+salePrice+'    ' });
-
-                    commandsArray.push({ append: '£'+amount });
-                    
-                    commandsArray.push({append: '\n'});
-                }
-            }
+            commandsArray.push({append: 'Customer'});
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-            commandsArray.push({ append: 'Total: £'+(WithoutVatProductTotal).toFixed(2) });
-            commandsArray.push({append: '\n'});
+            commandsArray.push({append: 'Date: '+savedOrderResonce[0]['ddate']});
+
+            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
             commandsArray.push({append: '--------------------------------\n'});
-        }
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-        commandsArray.push({ append: '  ' });
-        commandsArray.push({ append: '  ' });
-        commandsArray.push({ append: 'Grand Total: ' });
-        commandsArray.push({ append: '£'+(WithoutVatProductTotal+VatProductTotal).toFixed(2) });
-        
-        commandsArray.push({append: '\n'});
-        commandsArray.push({append: '\n'});
-        commandsArray.push({append: '\n'});
-        commandsArray.push({append: '\n'});
-        print();
-    };
-
-    printDesignStarPrinter2 = async (buyerData , ItemData, extraData) => {
-        commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-        
-        commandsArray2.push({append: "UK Inch\n"});
-        commandsArray2.push({append: "94 Staceway Worth, Crawley, RH107YR\n"});
-        commandsArray2.push({append: "Phone: 07917105510\n"});
-        commandsArray2.push({append: "Email: Ukinch2@gmail.com\n"});
-        commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-        commandsArray2.push({append: 'INVOICE: '+invoiceNumber});
-        commandsArray2.push({append: '\n'});
-        
-        //Customer Details
-        commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-        commandsArray2.push({append: '--------------------------------\n'});
-
-        commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-        commandsArray2.push({append: 'Customer'});
-        commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-        commandsArray2.push({append: 'Date: '+savedOrderResonce[0]['ddate']});
-        commandsArray2.push({append: '\n'});
-
-        commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-        commandsArray2.push({append: '--------------------------------\n'});
 
 
 
 
-        commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-        commandsArray2.push({append: 'Name: '});
-        // commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-        commandsArray2.push({append: buyerData['name']});
-        commandsArray2.push({append: '\n'});
-
-        commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-        commandsArray2.push({append: 'Address: '});
-        // commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-        commandsArray2.push({append: buyerData['address']});
-        commandsArray2.push({append: '\n'});
-
-        commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-        commandsArray2.push({append: 'Phone: '});
-        // commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-        commandsArray2.push({append: buyerData['contact_no']});
-        commandsArray2.push({append: '\n'});
-
-        commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-        commandsArray2.push({append: '--------------------------------\n'});
-        
-
-       
-        if( hasNonVatProducts ){
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-            commandsArray.push({append: 'Qty  '});
-            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-            commandsArray.push({append: 'Price   '});
-            commandsArray.push({append: 'Amount   '});
-            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.right});
-            commandsArray.push({append: 'VAT   '});
-            commandsArray.push({append: 'Total'});
-
-            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-            commandsArray.push({append: '\n'});
-            commandsArray.push({append: '--------------------------------\n'});
-
-            for(let i = 0 ; i < savedOrderResonce.length ; i++){
-                if( savedOrderResonce[i]['sale_item_rel'].itemcategory == 'EGGS' || savedOrderResonce[i].has_vat == 1){
-                    let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
-                    let salePrice = savedOrderResonce[i]['sale_price'];
-                    let qty = savedOrderResonce[i]['qty'];
-                    let vat = 0;
-                    let amount = 0;
-                    
-                    if( savedOrderResonce[i]['sale_item_rel'].itemcategory != 'EGGS' ){
-                        vat = (( (( ( (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']) * 1.20 ) - (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']))) ).toFixed(2)).toString();
-                    }
-                    if( savedOrderResonce[i]['sale_item_rel'].itemcategory == 'EGGS' ){
-                        amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
-                    }else{
-                        amount = (( (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']) * 1.20 ).toFixed(2)).toString();
-                    }
-                    totalAmount = (parseFloat(totalAmount));
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-                    commandsArray.push({append: sitem+'\n'});
-
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-                    commandsArray.push({append: (qty*1).toFixed(0)+'   '});
-
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-                    commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858, append: '£'+salePrice+'   '});
-                    commandsArray.push({append: '£'+(qty*salePrice).toFixed(2)+'   '});
-
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-                    commandsArray.push({append: '£'+vat+'   '});
-                    commandsArray.push({append: '£'+amount+'   '});
-                    
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-                    commandsArray.push({append: '\n'});
-                    commandsArray.push({append: '--------------------------------\n'});
-                }
-            }
-
+            commandsArray.push({append: 'Name'});
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-            commandsArray.push({append: 'Amount Before VAT: '+'£'+(VATTotal).toFixed(2)+'\n'});
-            commandsArray.push({append: 'VAT: '+'£'+(VatProductTotal-VATTotal).toFixed(2)+'\n'});
-            commandsArray.push({append:  'Total: '+'£'+(VatProductTotal).toFixed(2)+'\n'});
-        }
-        
-        if(WithoutVatProductTotal > 0){
+            commandsArray.push({append: buyerData['name']});
             commandsArray.push({append: '\n'});
-            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-            commandsArray.push({append: '*************************'});
-            
-            commandsArray.push({append: '\n'});
-            
+
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-            commandsArray.push({append: 'Qty'+'    '});
-            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-            commandsArray.push({append: 'Price'+'    '});
+            commandsArray.push({append: 'Address'});
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-            commandsArray.push({append: 'Amount'});
+            commandsArray.push({append: buyerData['address']});
             commandsArray.push({append: '\n'});
-            commandsArray.push({append: '--------------------------------\n'});
-            
-            for(let i = 0 ; i < savedOrderResonce.length ; i++){
-                if( savedOrderResonce[i]['sale_item_rel'].itemcategory != 'EGGS' && !savedOrderResonce[i]['has_vat'] ){
-                    let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
-                    let salePrice = savedOrderResonce[i]['sale_price'];
-                    let qty = savedOrderResonce[i]['qty'];
-                    let amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
-                    let vat = 0;
-                    totalAmount = (parseFloat(totalAmount));
 
-                    
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-                    commandsArray.push({append: sitem});
-                    commandsArray.push({append: '\n'});
-                    
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-                    commandsArray.push({ append: (qty*1).toFixed(0)+'    ' });
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-                    commandsArray.push({ append: '£'+salePrice+'    ' });
-                    commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-                    commandsArray.push({ append: '£'+amount });
-                    
-                    commandsArray.push({append: '\n'});
-                }
-            }
+            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
+            commandsArray.push({append: 'Phone'});
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-            commandsArray.push({ append: 'Total: £'+(WithoutVatProductTotal).toFixed(2) });
+            commandsArray.push({append: buyerData['contact_no']});
             commandsArray.push({append: '\n'});
+
+            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
             commandsArray.push({append: '--------------------------------\n'});
-        }
-        commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-        commandsArray2.push({ append: '' });
-        commandsArray2.push({ append: '' });
-        commandsArray2.push({ append: 'Grand Total: ' });
-        commandsArray2.push({ append: '£'+(WithoutVatProductTotal+VatProductTotal).toFixed(2) });
-        
-        commandsArray2.push({append: '\n'});
-        print2();
+         
+
+            if( hasNonVatProducts ){
+                commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
+                commandsArray.push({append: 'Qty'});
+                commandsArray.push({append: 'Price'});
+                commandsArray.push({append: 'Amount'});
+                commandsArray.push({append: 'VAT'});
+                commandsArray.push({append: 'Total'});
+
+                commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
+                commandsArray.push({append: '--------------------------------\n'});
+
+              
+                for(let i = 0 ; i < savedOrderResonce.length ; i++){
+                    if( savedOrderResonce[i]['sale_item_rel'].itemcategory == 'EGGS' || savedOrderResonce[i].has_vat == 1){
+                        let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
+                        let salePrice = savedOrderResonce[i]['sale_price'];
+                        let qty = savedOrderResonce[i]['qty'];
+                        let vat = 0;
+                        let amount = 0;
+                        if( savedOrderResonce[i]['sale_item_rel'].itemcategory != 'EGGS' ){
+                            vat = (( (( ( (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']) * 1.20 ) - (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']))) ).toFixed(2)).toString();
+                        }
+                        if( savedOrderResonce[i]['sale_item_rel'].itemcategory == 'EGGS' ){
+                            amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
+                        }else{
+                            amount = (( (savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']) * 1.20 ).toFixed(2)).toString();
+                        }
+                        
+                        totalAmount = (parseFloat(totalAmount));
+                        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
+                        commandsArray.push({append: sitem+'\n'});
+
+                        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
+                        commandsArray.push({append: (qty*1).toFixed(0)});
+                        commandsArray.push({append: '£'+salePrice});
+                        commandsArray.push({append: '£'+(qty*salePrice).toFixed(2)});
+                        commandsArray.push({append: '£'+vat});
+                        commandsArray.push({append: '£'+amoun});
+                        
+                        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
+                        commandsArray.push({append: '--------------------------------\n'});
+                    }
+                }
+                commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
+                commandsArray.push({append: 'Amount Before VAT: '+'£'+(VATTotal).toFixed(2)+'\n'});
+                commandsArray.push({append: 'VAT: '+'£'+(VatProductTotal-VATTotal).toFixed(2)+'\n'});
+                commandsArray.push({append:  'Total: '+'£'+(VatProductTotal).toFixed(2)+'\n'});
+            }
+            
+            if(WithoutVatProductTotal > 0){
+                commandsArray.push({append: '\n'});
+                commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
+                commandsArray.push({append: '*************************'});
+                
+                commandsArray.push({append: '\n'});
+                
+                commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
+                commandsArray.push({append: 'Qty'});
+                commandsArray.push({append: 'Price'});
+                commandsArray.push({append: 'Amount'});
+                commandsArray.push({append: '--------------------------------\n'});
+                
+                
+                for(let i = 0 ; i < savedOrderResonce.length ; i++){
+                    if( savedOrderResonce[i]['sale_item_rel'].itemcategory != 'EGGS' && !savedOrderResonce[i]['has_vat'] ){
+                        let sitem = savedOrderResonce[i]['sale_item_rel']['name'];
+                        let salePrice = savedOrderResonce[i]['sale_price'];
+                        let qty = savedOrderResonce[i]['qty'];
+                        let amount = ((savedOrderResonce[i]['sale_price'] * savedOrderResonce[i]['qty']).toFixed(2)).toString();
+                        let vat = 0;
+                        totalAmount = (parseFloat(totalAmount));
+
+                        
+                        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
+                        commandsArray.push({append: sitem});
+                        commandsArray.push({append: '\n'});
+                        
+                        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
+                        commandsArray.push({ append: (qty*1).toFixed(0) });
+                        commandsArray.push({ append: '£'+salePrice });
+                        commandsArray.push({ append: '£'+amount });
+                        
+                        commandsArray.push({append: '\n'});
+                    }
+                }
+                commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
+                commandsArray.push({ append: 'Total: £'+(WithoutVatProductTotal).toFixed(2) });
+                commandsArray.push({append: '--------------------------------\n'});
+            }
+            commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
+            commandsArray.push({ append: '' });
+            commandsArray.push({ append: '' });
+            commandsArray.push({ append: 'Grand Total: ' });
+            commandsArray.push({ append: '£'+(WithoutVatProductTotal+VatProductTotal).toFixed(2) });
+            
+            commandsArray.push({append: '\n'});
+            print();
+            // commandsArrayx
+            //images
+        //     await BluetoothEscposPrinter.printerAlign(
+        //         BluetoothEscposPrinter.ALIGN.LEFT,
+        //     );
+        //     await BluetoothEscposPrinter.printText('Signature: \n\r', {
+        //         encoding: 'GBK',
+        //         codepage: 0,
+        //         widthtimes: 0,
+        //         heigthtimes: 0,
+        //         fonttype: 1,
+        //     });
+        //     await BluetoothEscposPrinter.printPic(base64, {width: 100,left: 100,height: 50});
+
+
+        //     await BluetoothEscposPrinter.printText('\n\r', {});
+        //     await BluetoothEscposPrinter.printerAlign(
+        //         BluetoothEscposPrinter.ALIGN.LEFT,
+        //     );
+        //     await BluetoothEscposPrinter.printText('Remarks: \n\r', {
+        //         encoding: 'GBK',
+        //         codepage: 0,
+        //         widthtimes: 0,
+        //         heigthtimes: 0,
+        //         fonttype: 1,
+        //     });
+        //     await BluetoothEscposPrinter.printerAlign(
+        //     BluetoothEscposPrinter.ALIGN.CENTER,
+        // );
+        //     await BluetoothEscposPrinter.printText(remarks+'\n\r', {
+        //         encoding: 'GBK',
+        //         codepage: 0,
+        //         widthtimes: 1,
+        //         heigthtimes: 1,
+        //         fonttype: 1,
+        //     });
+
+        //     await BluetoothEscposPrinter.printText('\n\r', {});
+        //     await BluetoothEscposPrinter.printText('\n\r', {});
     };
 
     async function portDiscovery() {
@@ -1042,18 +897,9 @@ export default function PDFmanager({navigation , text, onOK}) {
         }
     }
 
-    async function print2() {
-        try {
-            var printResult = await StarPRNT.print('StarPRNT', commandsArray2, 'BT:');
-            alert(printResult); // Success!
-        } catch (e) {
-            alert(e);
-        }
-    }
-
     goToDashboard = () =>{
         AsyncStorage.removeItem('selectedLoadedItemsByQty')
-        AsyncStorage.removeItem('VATStatus');   
+        AsyncStorage.removeItem('VATStatus');
         AsyncStorage.removeItem('UndeliveredItemsInCart');
         AsyncStorage.removeItem('undeliveredItems');
         AsyncStorage.removeItem('finalItems');
@@ -1064,7 +910,6 @@ export default function PDFmanager({navigation , text, onOK}) {
         AsyncStorage.removeItem('orderSaveBuyer');
         navigation.push('Dashboard')
     }
-
     printReceipt = () => {
         setSaveOrderActivIndictor(true)
             if(selectedDriverId == 13){
@@ -1078,7 +923,7 @@ export default function PDFmanager({navigation , text, onOK}) {
                         setSaveOrderActivIndictor(false)
                         // AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
                         // AsyncStorage.setItem('orderSaveBuyer', JSON.stringify(res.data.buyer));
-                        navigation.navigate('DashboardRoutes');
+                        // navigation.navigate('DashboardRoutes');
                         alert('Order has been placed successfully');
                         setModalVisible(true)
                     })
@@ -1089,18 +934,19 @@ export default function PDFmanager({navigation , text, onOK}) {
                 AsyncStorage.getItem('user_id').then((res) => {
                 getDiverId(res).then((result) => {
                     setBluetoothName(result.printerName)
-                    // BluetoothManager.isBluetoothEnabled().then( (enabled) => {
-                    //     BluetoothManager.enableBluetooth().then( (r) => {
-                    //         if (r != undefined) {
-                    //             for (let i = 0; i < r.length; i++) {
-                    //                 // AsyncStorage.getItem('result.printerName').then((res) => {
-                    //                     if(res != null && res != undefined){
-                    //                         if(JSON.parse(r[i]).name == result.printerName){
-                    //                             hasPrinter = true;
-                    //                             paired.push(JSON.parse(r[i]).name);
-                    //                             setDevice(JSON.parse(r[i]).address)
+                    BluetoothManager.isBluetoothEnabled().then( (enabled) => {
+                        BluetoothManager.enableBluetooth().then( (r) => {
+                            
+                            if (r != undefined) {
+                                for (let i = 0; i < r.length; i++) {
+                                    // AsyncStorage.getItem('result.printerName').then((res) => {
+                                        if(res != null && res != undefined){
+                                            if(JSON.parse(r[i]).name == result.printerName){
+                                                hasPrinter = true;
+                                                paired.push(JSON.parse(r[i]).name);
+                                                setDevice(JSON.parse(r[i]).address)
 
-                    //                                 BluetoothManager.connect(JSON.parse(r[i]).address).then( (res) => {
+                                                    BluetoothManager.connect(JSON.parse(r[i]).address).then( (res) => {
                                                         AsyncStorage.getItem('readyForOrder').then((result) => {
                                                             let myData = JSON.parse(result)
                                         
@@ -1115,96 +961,57 @@ export default function PDFmanager({navigation , text, onOK}) {
                                                                 showToast('Order has been placed successfully')
                                                                 if( selectedDriverId != 13 ){
                                                                     if( selectedDriverId != 13 ){
-                                                                        // if( result.printerType == 'general'){
-                                                                        //     printDesign(res.data.buyer , res.data.data, res);
-                                                                        // }else{
+                                                                        if( result.printerType == 'general'){
+                                                                            printDesign(res.data.buyer , res.data.data, res);
+                                                                        }else{
                                                                             printDesignStarPrinter(res.data.buyer , res.data.data, res);
-                                                                        // }
-                                                                        // confirm('Order Places Successfully')
+                                                                        }
+                                                                        confirm('Order Places Successfully')                                                                       
                                                                         setModalVisible(true)
                                                                     }
                                                                 }
                                                             })
                                                         })
-                    //                                 },(e) => {
-                    //                                     setSaveOrderActivIndictor(false); 
-                    //                                     alert('Your Bluetooth printer is not connected.')
-                    //                                 });
-                    //                         }else{
-                    //                             if( i == (r.length-1) && !hasPrinter){
-                    //                                 setSaveOrderActivIndictor(false);  
-                    //                                 alert("Printer "+result.printerName+" not available.");
-                    //                             }
-                    //                         }
-                    //                     }else{
-                    //                         alert('No Printer available');
-                    //                                 setSaveOrderActivIndictor(false);  
+                                                    },(e) => {
+                                                        setSaveOrderActivIndictor(false); 
+                                                        alert('Your Bluetooth printer is not connected.')
+                                                    });
+                                            }else{
+                                                if( i == (r.length-1) && !hasPrinter){
+                                                    setSaveOrderActivIndictor(false);  
+                                                    alert("Printer "+result.printerName+" not available.");
+                                                }
+                                            }
+                                        }else{
+                                            alert('No Printer available');
+                                                    setSaveOrderActivIndictor(false);  
 
-                    //                     }
+                                        }
                                     
-                    //                 // })
-                    //             }
-                    //         }else{
-                    //         setSaveOrderActivIndictor(false);  
+                                    // })
+                                }
+                            }else{
+                            setSaveOrderActivIndictor(false);  
 
-                    //             alert('No Device detected');
-                    //         }
+                                alert('No Device detected');
+                            }
                     
-                    //     },(err) => {
-                    //         setSaveOrderActivIndictor(false);  
+                        },(err) => {
+                            setSaveOrderActivIndictor(false);  
 
-                    //         alert(err);
-                    //     });
-                    // },
-                        // (err) => {
-                        //     setSaveOrderActivIndictor(false);  
-                        //     alert(err);
-                        // },
-                    // );
-                });
-            });
+                            alert(err);
+                        });
+                    },
+                        (err) => {
+                            setSaveOrderActivIndictor(false);  
+                            alert(err);
+                        },
+                    );
+                })
+            })
         }
         setisBluetoothEnabled(false)
         // setSaveOrderActivIndictor(false)
-    }
-    
-    printReceipt2 = () => {
-        setSaveOrderActivIndictor(true)
-        if(selectedDriverId == 13){
-            AsyncStorage.getItem('readyForOrder').then((result) => {
-                let myData = JSON.parse(result)
-                myData.push({'signature' : base64,'remarks' : remarks,'invoice_no' : invoiceNumber});
-                SaveOrder(JSON.stringify(myData)).then((res) => {
-                    setSaveOrderActivIndictor(false)
-                    alert('Order has been placed successfully');
-                    setModalVisible(true)
-                })
-            })
-        }else{
-            let hasPrinter = false;
-            setSaveOrderActivIndictor(true);  
-            AsyncStorage.getItem('user_id').then((res) => {
-                getDiverId(res).then((result) => {
-                    setBluetoothName(result.printerName)
-                    AsyncStorage.getItem('readyForOrder').then((result) => {
-                        let myData = JSON.parse(result)
-                        myData.push({'signature' : base64,'remarks' : remarks,'invoice_no' : invoiceNumber});
-                        
-                        SaveOrder(JSON.stringify(myData)).then((res) => {
-                            setSaveOrderActivIndictor(false)
-                            showToast('Order has been placed successfully')
-                            if( selectedDriverId != 13 ){
-                                if( selectedDriverId != 13 ){                                                                      
-                                    printDesignStarPrinter2(res.data.buyer , res.data.data, res);
-                                    setModalVisible(true)
-                                }
-                            }
-                        })
-                    })
-                });
-            });
-        }
-        setisBluetoothEnabled(false)
     }
     function changeCreditStatus(status) {
 		setCreditStatus(status)
@@ -1226,7 +1033,7 @@ export default function PDFmanager({navigation , text, onOK}) {
                                     <Text style={{ fontSize: 30,textAlign: 'center'}}>UK Inch</Text>
                                     <Text style={{ fontSize: 15,textAlign: 'center'}}>94 Staceway Worth, Crawley, RH107YR</Text>
                                     <Text style={{ fontSize: 15,textAlign: 'center'}}>Phone: 07917105510</Text>
-                                    <Text style={{ fontSize: 15,textAlign: 'center'}}>Email: Ukinch2@gmail.com</Text>
+                                    <Text style={{ fontSize: 15,textAlign: 'center'}}>Email: Ekinch2@gmail.com</Text>
                                     <Text style={{ fontSize: 15,textAlign: 'left',marginLeft: 20}}>INVOICE: {(invoiceNumber != undefined)? invoiceNumber : ''}</Text>
                                     <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,marginTop: 20,borderBottomColor:'black',borderTopColor:'black',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1,padding: 10 }}>
                                         <Text style={{fontWeight: 'bold',width: 100}}>Customer</Text>
@@ -1427,14 +1234,17 @@ export default function PDFmanager({navigation , text, onOK}) {
                                 {/* <ActivityIndicator  color={Colors.primary} size="large" /> */}
                                 {(saveOrderActivIndictor)? <ActivityIndicator  color={Colors.primary} size="large" /> : 
                                 
+                                
                                 <View style={{flexDirection: 'column'}}>
                                     <Pressable  onPress={() => {portDiscovery()}} style={{backgroundColor: 'black',padding: 10,marginBottom: 20}} ><Text style={{color: 'white',textAlign: 'center'}}>Get Ports</Text></Pressable>
                                     <Pressable  onPress={() => {connect()}}  style={{backgroundColor: 'black',padding: 10,marginBottom: 20}}><Text style={{color: 'white',textAlign: 'center'}}>Connect</Text></Pressable>
                                     <Button title="Print" onPress={() => { setSaveOrderActivIndictor(true);  printReceipt() }} />
-                                    {/* <Button title="Print2" onPress={() => { setSaveOrderActivIndictor(true);  printReceipt2() }} /> */}
                                 </View>
                                 
                                 }
+
+                                
+
                             </View>
 
                             <View style={{flex: 2}}></View>
@@ -1454,7 +1264,7 @@ export default function PDFmanager({navigation , text, onOK}) {
                                 <Text style={{ fontSize: 30,textAlign: 'center'}}>UK Inch</Text>
                                 <Text style={{ fontSize: 15,textAlign: 'center'}}>94 Staceway Worth, Crawley, RH107YR</Text>
                                 <Text style={{ fontSize: 15,textAlign: 'center'}}>Phone: 07917105510</Text>
-                                <Text style={{ fontSize: 15,textAlign: 'center'}}>Email: Ukinch2@gmail.com</Text>
+                                <Text style={{ fontSize: 15,textAlign: 'center'}}>Email: Ekinch2@gmail.com</Text>
                                 <Text style={{ fontSize: 15,textAlign: 'left',marginLeft: 20}}>INVOICE: {(invoiceNumber != undefined)? invoiceNumber : ''}</Text>
                                 <View style={{ flex: 0.2, flexDirection:'row',justifyContent: 'space-between',paddingHorizontal: 20,marginTop: 20,borderBottomColor:'black',borderTopColor:'black',borderLeftColor:'transparent',borderRightColor:'transparent',borderWidth: 1,padding: 10 }}>
                                     <Text style={{fontWeight: 'bold',width: 100}}>Customer</Text>

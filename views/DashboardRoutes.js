@@ -51,6 +51,7 @@ const list = [
             AsyncStorage.getItem('selectedRoute').then((routeId) => {
                 AsyncStorage.getItem('user_id').then((driverid) => {
                     getPriorityDrivers(driverid , routeId).then((res) => {
+                        console.log(res)
                         setHasRoutes(true)
                         setListRoutes(res.data.data);
                     } , (err) =>{
@@ -104,9 +105,13 @@ const list = [
                     </View> */}
                     <View style={styles.nextButton}>
                         <Pressable onPress={ () => {
-                            
-                            AsyncStorage.setItem('selectedLoadedItemsByQty' , JSON.stringify({}))                         
-                            navigation.push('ItemsScreenWithQty') 
+                            console.log(active)
+                            if( active != undefined) {
+                                AsyncStorage.setItem('selectedLoadedItemsByQty' , JSON.stringify({}))                         
+                                navigation.push('ItemsScreenWithQty') 
+                            }else{
+                                alert("Please select any buyer");
+                            }
                         }}>
                             <Icon name="chevron-right" type='font-awesome' color="white" style={{padding: 10}}/>
                         </Pressable>

@@ -30,7 +30,7 @@ export default function Nav() {
 	return (
 		<NavigationContainer theme={DarkTheme}>
 			<Stack.Navigator
-				initialRouteName="PDFmanager"
+				initialRouteName="LoginScreen"
 				allowFontScaling={false}
 				screenOptions={{
 				headerStyle: {

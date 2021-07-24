@@ -20,6 +20,8 @@ target 'app' do
 
   pod 'RNCCheckbox', :path => '../node_modules/@react-native-community/checkbox'
 
+  pod 'RNStarPrnt', :path => '../node_modules/react-native-star-prnt'
+
   target 'appTests' do
     inherit! :complete
     # Pods for testing

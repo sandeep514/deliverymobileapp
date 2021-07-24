@@ -27,6 +27,7 @@
     "react-native-safe-area-context": "^3.2.0",
     "react-native-screens": "^3.1.1",
     "react-native-signature-canvas": "^4.0.0",
+    "react-native-star-prnt": "^1.1.0",
     "react-native-vector-icons": "^8.1.0",
     "react-native-webview": "11.4.4"
   },
