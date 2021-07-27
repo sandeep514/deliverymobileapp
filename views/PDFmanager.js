@@ -347,7 +347,7 @@ export default function PDFmanager({navigation , text, onOK}) {
                 fonttype: 1,
             });
             await BluetoothEscposPrinter.setBlob(0);
-            await BluetoothEscposPrinter.printText('94 Staceway Worth, Crawley, RH107YR\n\r', {
+            await BluetoothEscposPrinter.printText('Unit 12C, Bridge Industrial Estate,RH6 9HU\n\r', {
                 encoding: 'GBK',
                 codepage: 0,
                 widthtimes: 0,
@@ -697,15 +697,11 @@ export default function PDFmanager({navigation , text, onOK}) {
 
 
     printDesignStarPrinter = async (buyerData , ItemData, extraData) => {
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
         
-        commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858});
-        commandsArray.push({appendEncoding: StarPRNT.Encoding.USASCII});
-        commandsArray.push({appendInternational: StarPRNT.InternationalType.UK});
-        commandsArray.push({appendBytes:[0x9c]});
-
-        commandsArray.push({appendBitmapText: "UK Inch\n",fontSize:32});
-        commandsArray.push({append: "94 Staceway Worth, Crawley, RH107YR\n"});
+        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
+        commandsArray.push({appendBitmapText: "UK Inch",fontSize:40});
+        commandsArray.push({append: '\n'});
+        commandsArray.push({append: "Unit 12C, Bridge Industrial Estate,RH6 9HU\n"});
         commandsArray.push({append: "Phone: 07917105510\n"});
         commandsArray.push({append: "Email: Ukinch2@gmail.com\n"});
         commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
@@ -716,8 +712,7 @@ export default function PDFmanager({navigation , text, onOK}) {
         commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
         commandsArray.push({append: '--------------------------------\n'});
 
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-        commandsArray.push({append: 'Customer'});
+        
         commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
         commandsArray.push({append: 'Date: '+savedOrderResonce[0]['ddate']});
         commandsArray.push({append: '\n'});
@@ -726,23 +721,20 @@ export default function PDFmanager({navigation , text, onOK}) {
         commandsArray.push({append: '--------------------------------\n'});
 
 
-
-
+        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
+        commandsArray.push({append: 'Customer \n'});
         commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
         commandsArray.push({append: 'Name: '});
-        // commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
         commandsArray.push({append: buyerData['name']});
         commandsArray.push({append: '\n'});
 
         commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
         commandsArray.push({append: 'Address: '});
-        // commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
         commandsArray.push({append: buyerData['address']});
         commandsArray.push({append: '\n'});
 
         commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
         commandsArray.push({append: 'Phone: '});
-        // commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
         commandsArray.push({append: buyerData['contact_no']});
         commandsArray.push({append: '\n'});
 
@@ -754,10 +746,10 @@ export default function PDFmanager({navigation , text, onOK}) {
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
             commandsArray.push({append: 'Qty  '});
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-            commandsArray.push({append: 'Price   '});
-            commandsArray.push({append: 'Amount   '});
+            commandsArray.push({append: 'Price  '});
+            commandsArray.push({append: 'Amount '});
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.right});
-            commandsArray.push({append: 'VAT   '});
+            commandsArray.push({append: 'VAT  '});
             commandsArray.push({append: 'Total'});
 
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
@@ -788,12 +780,31 @@ export default function PDFmanager({navigation , text, onOK}) {
                     commandsArray.push({append: (qty*1).toFixed(0)+'   '});
 
                     commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
-                    commandsArray.push({append: '£'+salePrice+'   '});
-                    commandsArray.push({append: '£'+(qty*salePrice).toFixed(2)+'   '});
+                    commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858});
+                    commandsArray.push({appendEncoding: StarPRNT.Encoding.USASCII});
+                    commandsArray.push({appendInternational: StarPRNT.InternationalType.UK});
+                    commandsArray.push({appendBytes:[0x9c]});
+                    commandsArray.push({append: salePrice+'   '});
+
+                    commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858});
+                    commandsArray.push({appendEncoding: StarPRNT.Encoding.USASCII});
+                    commandsArray.push({appendInternational: StarPRNT.InternationalType.UK});
+                    commandsArray.push({appendBytes:[0x9c]});
+                    commandsArray.push({append: (qty*salePrice).toFixed(2)+'   '});
 
                     commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-                    commandsArray.push({append: '£'+vat+'   '});
-                    commandsArray.push({append: '£'+amount+'   '});
+
+                    commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858});
+                    commandsArray.push({appendEncoding: StarPRNT.Encoding.USASCII});
+                    commandsArray.push({appendInternational: StarPRNT.InternationalType.UK});
+                    commandsArray.push({appendBytes:[0x9c]});
+                    commandsArray.push({append: vat+'   '});
+
+                    commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858});
+                    commandsArray.push({appendEncoding: StarPRNT.Encoding.USASCII});
+                    commandsArray.push({appendInternational: StarPRNT.InternationalType.UK});
+                    commandsArray.push({appendBytes:[0x9c]});
+                    commandsArray.push({append: amount});
                     
                     commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
                     commandsArray.push({append: '\n'});
@@ -802,9 +813,27 @@ export default function PDFmanager({navigation , text, onOK}) {
             }
 
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-            commandsArray.push({append: 'Amount Before VAT: '+'£'+(VATTotal).toFixed(2)+'\n'});
-            commandsArray.push({append: 'VAT: '+'£'+(VatProductTotal-VATTotal).toFixed(2)+'\n'});
-            commandsArray.push({append:  'Total: '+'£'+(VatProductTotal).toFixed(2)+'\n'});
+            commandsArray.push({append: 'Amount Before VAT: '});
+            commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858});
+            commandsArray.push({appendEncoding: StarPRNT.Encoding.USASCII});
+            commandsArray.push({appendInternational: StarPRNT.InternationalType.UK});
+            commandsArray.push({appendBytes:[0x9c]});
+            commandsArray.push({append: (VATTotal).toFixed(2)+'\n'});
+
+            commandsArray.push({append: 'VAT: '});
+            commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858});
+            commandsArray.push({appendEncoding: StarPRNT.Encoding.USASCII});
+            commandsArray.push({appendInternational: StarPRNT.InternationalType.UK});
+            commandsArray.push({appendBytes:[0x9c]});
+            commandsArray.push({append: (VatProductTotal-VATTotal).toFixed(2)+'\n'});
+
+            commandsArray.push({append: 'Total: '});
+            commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858});
+            commandsArray.push({appendEncoding: StarPRNT.Encoding.USASCII});
+            commandsArray.push({appendInternational: StarPRNT.InternationalType.UK});
+            commandsArray.push({appendBytes:[0x9c]});
+            commandsArray.push({append: (VatProductTotal).toFixed(2)+'\n'});
+
         }
         
         if(WithoutVatProductTotal > 0){
@@ -815,9 +844,9 @@ export default function PDFmanager({navigation , text, onOK}) {
             commandsArray.push({append: '\n'});
             
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
-            commandsArray.push({append: 'Qty'+'    '});
-            commandsArray.push({append: 'Price'+'    '});
-            commandsArray.push({append: 'Amount'});
+            commandsArray.push({append: 'Qty'+'     '});
+            commandsArray.push({append: 'Price'+'       '});
+            commandsArray.push({append: 'Amt'});
             commandsArray.push({append: '\n'});
             commandsArray.push({append: '--------------------------------\n'});
             
@@ -835,26 +864,47 @@ export default function PDFmanager({navigation , text, onOK}) {
                     commandsArray.push({append: sitem});
                     commandsArray.push({append: '\n'});
                     
-                    commandsArray.push({ append: (qty*1).toFixed(0)+'    ' });
+                    commandsArray.push({ append: (qty*1).toFixed(0)+'       ' });
 
-                    commandsArray.push({ append: '£'+salePrice+'    ' });
+                    commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858});
+                    commandsArray.push({appendEncoding: StarPRNT.Encoding.USASCII});
+                    commandsArray.push({appendInternational: StarPRNT.InternationalType.UK});
+                    commandsArray.push({appendBytes:[0x9c]});
+                    commandsArray.push({ append: salePrice+'       ' });
 
-                    commandsArray.push({ append: '£'+amount });
+                    commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858});
+                    commandsArray.push({appendEncoding: StarPRNT.Encoding.USASCII});
+                    commandsArray.push({appendInternational: StarPRNT.InternationalType.UK});
+                    commandsArray.push({appendBytes:[0x9c]});
+                    commandsArray.push({ append: amount });
                     
                     commandsArray.push({append: '\n'});
                 }
             }
             commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
-            commandsArray.push({ append: 'Total: £'+(WithoutVatProductTotal).toFixed(2) });
+            commandsArray.push({ append: 'Total: ' });
+
+            commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858});
+            commandsArray.push({appendEncoding: StarPRNT.Encoding.USASCII});
+            commandsArray.push({appendInternational: StarPRNT.InternationalType.UK});
+            commandsArray.push({appendBytes:[0x9c]});
+
+            commandsArray.push({ append: (WithoutVatProductTotal).toFixed(2) });
             commandsArray.push({append: '\n'});
             commandsArray.push({append: '--------------------------------\n'});
         }
-        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
+
+        commandsArray.push({appendAlignment: StarPRNT.AlignmentPosition.Right});
         commandsArray.push({ append: '  ' });
         commandsArray.push({ append: '  ' });
         commandsArray.push({ append: 'Grand Total: ' });
-        commandsArray.push({ append: '£'+(WithoutVatProductTotal+VatProductTotal).toFixed(2) });
-        
+
+        commandsArray.push({appendCodePage:StarPRNT.CodePageType.CP858});
+        commandsArray.push({appendEncoding: StarPRNT.Encoding.USASCII});
+        commandsArray.push({appendInternational: StarPRNT.InternationalType.UK});
+        commandsArray.push({appendBytes:[0x9c]});
+
+        commandsArray.push({ append: (WithoutVatProductTotal+VatProductTotal).toFixed(2) });        
         commandsArray.push({append: '\n'});
         commandsArray.push({append: '\n'});
         commandsArray.push({append: '\n'});
@@ -866,7 +916,7 @@ export default function PDFmanager({navigation , text, onOK}) {
         commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Center});
         
         commandsArray2.push({append: "UK Inch\n"});
-        commandsArray2.push({append: "94 Staceway Worth, Crawley, RH107YR\n"});
+        commandsArray2.push({append: "Unit 12C, Bridge Industrial Estate,RH6 9HU\n"});
         commandsArray2.push({append: "Phone: 07917105510\n"});
         commandsArray2.push({append: "Email: Ukinch2@gmail.com\n"});
         commandsArray2.push({appendAlignment: StarPRNT.AlignmentPosition.Left});
@@ -1067,103 +1117,103 @@ export default function PDFmanager({navigation , text, onOK}) {
 
     printReceipt = () => {
         setSaveOrderActivIndictor(true)
-            if(selectedDriverId == 13){
-                AsyncStorage.getItem('readyForOrder').then((result) => {
-                    let myData = JSON.parse(result)
+        if(selectedDriverId == 13){
+            AsyncStorage.getItem('readyForOrder').then((result) => {
+                let myData = JSON.parse(result)
 
-                    myData.push({'signature' : base64,'remarks' : remarks,'invoice_no' : invoiceNumber});
-                    // myData.push({'remarks' : remarks});
-                    // myData.push({'invoice_no' : invoiceNumber});
-                    SaveOrder(JSON.stringify(myData)).then((res) => {
-                        setSaveOrderActivIndictor(false)
-                        // AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
-                        // AsyncStorage.setItem('orderSaveBuyer', JSON.stringify(res.data.buyer));
-                        navigation.navigate('DashboardRoutes');
-                        alert('Order has been placed successfully');
-                        setModalVisible(true)
-                    })
+                myData.push({'signature' : base64,'remarks' : remarks,'invoice_no' : invoiceNumber});
+                // myData.push({'remarks' : remarks});
+                // myData.push({'invoice_no' : invoiceNumber});
+                SaveOrder(JSON.stringify(myData)).then((res) => {
+                    setSaveOrderActivIndictor(false)
+                    // AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
+                    // AsyncStorage.setItem('orderSaveBuyer', JSON.stringify(res.data.buyer));
+                    navigation.navigate('DashboardRoutes');
+                    alert('Order has been placed successfully');
+                    setModalVisible(true)
                 })
-            }else{
-                let hasPrinter = false;
-                setSaveOrderActivIndictor(true);  
-                AsyncStorage.getItem('user_id').then((res) => {
-                getDiverId(res).then((result) => {
-                    setBluetoothName(result.printerName)
-                    // BluetoothManager.isBluetoothEnabled().then( (enabled) => {
-                    //     BluetoothManager.enableBluetooth().then( (r) => {
-                    //         if (r != undefined) {
-                    //             for (let i = 0; i < r.length; i++) {
-                    //                 // AsyncStorage.getItem('result.printerName').then((res) => {
-                    //                     if(res != null && res != undefined){
-                    //                         if(JSON.parse(r[i]).name == result.printerName){
-                    //                             hasPrinter = true;
-                    //                             paired.push(JSON.parse(r[i]).name);
-                    //                             setDevice(JSON.parse(r[i]).address)
+            })
+        }else{
+            let hasPrinter = false;
+            setSaveOrderActivIndictor(true);  
+            AsyncStorage.getItem('user_id').then((res) => {
+            getDiverId(res).then((result) => {
+                setBluetoothName(result.printerName)
+                // BluetoothManager.isBluetoothEnabled().then( (enabled) => {
+                //     BluetoothManager.enableBluetooth().then( (r) => {
+                //         if (r != undefined) {
+                //             for (let i = 0; i < r.length; i++) {
+                //                 // AsyncStorage.getItem('result.printerName').then((res) => {
+                //                     if(res != null && res != undefined){
+                //                         if(JSON.parse(r[i]).name == result.printerName){
+                //                             hasPrinter = true;
+                //                             paired.push(JSON.parse(r[i]).name);
+                //                             setDevice(JSON.parse(r[i]).address)
 
-                    //                                 BluetoothManager.connect(JSON.parse(r[i]).address).then( (res) => {
-                                                        AsyncStorage.getItem('readyForOrder').then((result) => {
-                                                            let myData = JSON.parse(result)
-                                        
-                                                            myData.push({'signature' : base64,'remarks' : remarks,'invoice_no' : invoiceNumber});
-                                                            // myData.push({'remarks' : remarks});
-                                                            // myData.push({'invoice_no' : invoiceNumber});
-                                                            // return false;
-                                                            SaveOrder(JSON.stringify(myData)).then((res) => {
-                                                                setSaveOrderActivIndictor(false)
-                                                                // AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
-                                                                // AsyncStorage.setItem('orderSaveBuyer', JSON.stringify(res.data.buyer));
-                                                                showToast('Order has been placed successfully')
-                                                                if( selectedDriverId != 13 ){
-                                                                    if( selectedDriverId != 13 ){
-                                                                        // if( result.printerType == 'general'){
-                                                                        //     printDesign(res.data.buyer , res.data.data, res);
-                                                                        // }else{
-                                                                            printDesignStarPrinter(res.data.buyer , res.data.data, res);
-                                                                        // }
-                                                                        // confirm('Order Places Successfully')
-                                                                        setModalVisible(true)
-                                                                    }
-                                                                }
-                                                            })
-                                                        })
-                    //                                 },(e) => {
-                    //                                     setSaveOrderActivIndictor(false); 
-                    //                                     alert('Your Bluetooth printer is not connected.')
-                    //                                 });
-                    //                         }else{
-                    //                             if( i == (r.length-1) && !hasPrinter){
-                    //                                 setSaveOrderActivIndictor(false);  
-                    //                                 alert("Printer "+result.printerName+" not available.");
-                    //                             }
-                    //                         }
-                    //                     }else{
-                    //                         alert('No Printer available');
-                    //                                 setSaveOrderActivIndictor(false);  
-
-                    //                     }
+                //                                 BluetoothManager.connect(JSON.parse(r[i]).address).then( (res) => {
+                                                    AsyncStorage.getItem('readyForOrder').then((result) => {
+                                                        let myData = JSON.parse(result)
                                     
-                    //                 // })
-                    //             }
-                    //         }else{
-                    //         setSaveOrderActivIndictor(false);  
+                                                        myData.push({'signature' : base64,'remarks' : remarks,'invoice_no' : invoiceNumber});
+                                                        // myData.push({'remarks' : remarks});
+                                                        // myData.push({'invoice_no' : invoiceNumber});
+                                                        // return false;
+                                                        SaveOrder(JSON.stringify(myData)).then((res) => {
+                                                            setSaveOrderActivIndictor(false)
+                                                            // AsyncStorage.setItem('orderSaveReponce', JSON.stringify(res.data.data));
+                                                            // AsyncStorage.setItem('orderSaveBuyer', JSON.stringify(res.data.buyer));
+                                                            showToast('Order has been placed successfully')
+                                                            if( selectedDriverId != 13 ){
+                                                                if( selectedDriverId != 13 ){
+                                                                    // if( result.printerType == 'general'){
+                                                                    //     printDesign(res.data.buyer , res.data.data, res);
+                                                                    // }else{
+                                                                        printDesignStarPrinter(res.data.buyer , res.data.data, res);
+                                                                    // }
+                                                                    // confirm('Order Places Successfully')
+                                                                    setModalVisible(true)
+                                                                }
+                                                            }
+                                                        })
+                                                    })
+                //                                 },(e) => {
+                //                                     setSaveOrderActivIndictor(false); 
+                //                                     alert('Your Bluetooth printer is not connected.')
+                //                                 });
+                //                         }else{
+                //                             if( i == (r.length-1) && !hasPrinter){
+                //                                 setSaveOrderActivIndictor(false);  
+                //                                 alert("Printer "+result.printerName+" not available.");
+                //                             }
+                //                         }
+                //                     }else{
+                //                         alert('No Printer available');
+                //                                 setSaveOrderActivIndictor(false);  
 
-                    //             alert('No Device detected');
-                    //         }
-                    
-                    //     },(err) => {
-                    //         setSaveOrderActivIndictor(false);  
+                //                     }
+                                
+                //                 // })
+                //             }
+                //         }else{
+                //         setSaveOrderActivIndictor(false);  
 
-                    //         alert(err);
-                    //     });
+                //             alert('No Device detected');
+                //         }
+                
+                //     },(err) => {
+                //         setSaveOrderActivIndictor(false);  
+
+                //         alert(err);
+                //     });
+                // },
+                    // (err) => {
+                    //     setSaveOrderActivIndictor(false);  
+                    //     alert(err);
                     // },
-                        // (err) => {
-                        //     setSaveOrderActivIndictor(false);  
-                        //     alert(err);
-                        // },
-                    // );
-                });
+                // );
             });
-        }
+        });
+    }
         setisBluetoothEnabled(false)
         // setSaveOrderActivIndictor(false)
     }
@@ -1224,7 +1274,7 @@ export default function PDFmanager({navigation , text, onOK}) {
                                         Invoice
                                     </Text>
                                     <Text style={{ fontSize: 30,textAlign: 'center'}}>UK Inch</Text>
-                                    <Text style={{ fontSize: 15,textAlign: 'center'}}>94 Staceway Worth, Crawley, RH107YR</Text>
+                                    <Text style={{ fontSize: 15,textAlign: 'center'}}>Unit 12C, Bridge Industrial Estate,RH6 9HU</Text>
                                     <Text style={{ fontSize: 15,textAlign: 'center'}}>Phone: 07917105510</Text>
                                     <Text style={{ fontSize: 15,textAlign: 'center'}}>Email: Ukinch2@gmail.com</Text>
                                     <Text style={{ fontSize: 15,textAlign: 'left',marginLeft: 20}}>INVOICE: {(invoiceNumber != undefined)? invoiceNumber : ''}</Text>
@@ -1452,7 +1502,7 @@ export default function PDFmanager({navigation , text, onOK}) {
                                     Invoice
                                 </Text>
                                 <Text style={{ fontSize: 30,textAlign: 'center'}}>UK Inch</Text>
-                                <Text style={{ fontSize: 15,textAlign: 'center'}}>94 Staceway Worth, Crawley, RH107YR</Text>
+                                <Text style={{ fontSize: 15,textAlign: 'center'}}>Unit 12C, Bridge Industrial Estate,RH6 9HU</Text>
                                 <Text style={{ fontSize: 15,textAlign: 'center'}}>Phone: 07917105510</Text>
                                 <Text style={{ fontSize: 15,textAlign: 'center'}}>Email: Ukinch2@gmail.com</Text>
                                 <Text style={{ fontSize: 15,textAlign: 'left',marginLeft: 20}}>INVOICE: {(invoiceNumber != undefined)? invoiceNumber : ''}</Text>
